@@ -1,792 +1,1086 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Dashboard CRM Owner - Manajemen member, campaign, dan laporan bisnis">
-  <title>CRM Dashboard - Owner Panel</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-</head>
-<body>
-  <!-- Toast Container -->
-  <div class="toast-container" id="toastContainer"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Dashboard CRM Owner - Manajemen member, campaign, dan laporan bisnis"
+    />
+    <title>CRM - Owner Panel</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Sidebar Overlay (Mobile) -->
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <div class="app-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-brand">
-        <div class="brand-icon">⚡</div>
-        <div class="brand-text">
-          <h1>CRM Panel</h1>
-          <span>Owner Dashboard</span>
-        </div>
-      </div>
-
-      <nav class="sidebar-nav">
-        <div class="nav-label">Menu Utama</div>
-        <div class="nav-item active" data-page="member" id="nav-member">
-          <span class="nav-icon">👥</span>
-          <span>Dasbor Member</span>
-        </div>
-        <div class="nav-item" data-page="promo" id="nav-promo">
-          <span class="nav-icon">🎯</span>
-          <span>Dasbor Promo</span>
-        </div>
-        <div class="nav-item" data-page="laporan" id="nav-laporan">
-          <span class="nav-icon">📊</span>
-          <span>Dasbor Laporan</span>
-          <span class="nav-badge">3</span>
-        </div>
-        <div class="nav-item" data-page="akun" id="nav-akun">
-          <span class="nav-icon">⚙️</span>
-          <span>Manajemen Akun</span>
-        </div>
-      </nav>
-
-      <div class="sidebar-footer">
-        <div class="user-info">
-          <div class="user-avatar">OA</div>
-          <div class="user-details">
-            <span class="user-name">Owner Admin</span>
-            <span class="user-role">owner@crm.com</span>
+    <div class="app-layout">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <div class="brand-icon">⚡</div>
+          <div class="brand-text">
+            <h1>CRM Panel</h1>
+            <span>Owner Dashboard</span>
           </div>
         </div>
-      </div>
-    </aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <!-- Header -->
-      <header class="main-header">
-        <div class="header-left">
-          <button class="menu-toggle" id="menuToggle">☰</button>
-          <div class="page-title">
-            <h2 id="pageTitle">Dasbor Member</h2>
-            <span id="pageSubtitle">Kelola semua data member Anda</span>
+        <nav class="sidebar-nav">
+          <div class="nav-label">Menu Utama</div>
+          <div class="nav-item active" data-page="member" id="nav-member">
+            <span class="nav-icon">👥</span>
+            <span>Dasbor Member</span>
+          </div>
+          <div class="nav-item" data-page="promo" id="nav-promo">
+            <span class="nav-icon">🎯</span>
+            <span>Dasbor Promo</span>
+          </div>
+          <div class="nav-item" data-page="laporan" id="nav-laporan">
+            <span class="nav-icon">📊</span>
+            <span>Dasbor Laporan</span>
+            <span class="nav-badge">3</span>
+          </div>
+          <div class="nav-item" data-page="akun" id="nav-akun">
+            <span class="nav-icon">⚙️</span>
+            <span>Manajemen Akun</span>
+          </div>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-info">
+            <div class="user-avatar">OA</div>
+            <div class="user-details">
+              <span class="user-name">Owner Admin</span>
+              <span class="user-role">owner@crm.com</span>
+            </div>
           </div>
         </div>
-        <div class="header-right">
-          <span class="date-display" id="dateDisplay"></span>
-          <button class="header-btn" title="Notifikasi" id="notifBtn">
-            🔔
-            <span class="notif-dot"></span>
-          </button>
-          <button class="header-btn" title="Refresh Data" id="refreshBtn">🔄</button>
-        </div>
-      </header>
+      </aside>
 
-      <!-- Page Content -->
-      <div class="page-content">
-
-        <!-- ==================== -->
-        <!-- 1. DASBOR MEMBER     -->
-        <!-- ==================== -->
-        <section class="dashboard-section active" id="section-member">
-          
-          <!-- MASTER VIEW -->
-          <div id="memberMasterView">
-            <!-- Widgets -->
-            <div class="widgets-grid">
-              <div class="widget-card widget-blue clickable-widget" id="widget-member">
-                <div class="widget-header">
-                  <div class="widget-icon">👥</div>
-                </div>
-                <div class="widget-value" id="w-total-members">0</div>
-                <div class="widget-label">member</div>
-              </div>
-              <div class="widget-card widget-purple clickable-widget" id="widget-campaign-claim">
-                <div class="widget-header">
-                  <div class="widget-icon">🎫</div>
-                </div>
-                <div class="widget-value" id="w-campaign-claims">0</div>
-                <div class="widget-label">member_campaign_claim</div>
-              </div>
-              <div class="widget-card widget-green clickable-widget" id="widget-transaction">
-                <div class="widget-header">
-                  <div class="widget-icon">💰</div>
-                </div>
-                <div class="widget-value" id="w-transactions">0</div>
-                <div class="widget-label">member_transaction_history</div>
-              </div>
-              <div class="widget-card widget-orange clickable-widget" id="widget-level">
-                <div class="widget-header">
-                  <div class="widget-icon">🏅</div>
-                </div>
-                <div class="widget-value" id="w-levels">4</div>
-                <div class="widget-label">member_level</div>
-              </div>
-            </div>
-
-            <!-- Member Table -->
-            <div class="card mt-3">
-              <div class="card-header">
-                <div class="card-title"><span class="card-icon">👥</span> Daftar Member</div>
-                <div class="search-bar">
-                  <span class="search-icon">🔍</span>
-                  <input type="text" placeholder="Cari member..." id="memberSearch">
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="table-container">
-                  <table class="data-table" id="memberTable">
-                    <thead>
-                      <tr>
-                        <th>Nama</th>
-                        <th>No. WhatsApp</th>
-                        <th>Level</th>
-                        <th>Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody id="memberTableBody"></tbody>
-                  </table>
-                </div>
-              </div>
-              <div class="card-footer">
-                <span class="text-muted" style="font-size:0.78rem;color:var(--text-muted)" id="memberCount">0 member</span>
-                <div class="pagination" id="memberPagination"></div>
-              </div>
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Header -->
+        <header class="main-header">
+          <div class="header-left">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <div class="page-title">
+              <h2 id="pageTitle">Dasbor Member</h2>
+              <span id="pageSubtitle">Kelola semua data member Anda</span>
             </div>
           </div>
-
-          <!-- DETAIL VIEWS (Widget Tables) -->
-          <div id="memberDetailViews" style="display: none;">
-            <button class="btn btn-secondary mb-3" id="btnBackToMemberMaster">⬅ Kembali</button>
-            
-            <!-- Table: member -->
-            <div class="card detail-view-table" id="view-table-member" style="display: none;">
-              <div class="card-header">
-                <div class="card-title"><span class="card-icon">👥</span> Tabel: member</div>
-                <button class="btn btn-primary btn-sm" onclick="openAddModal('member')">➕ Tambah member</button>
-              </div>
-              <div class="card-body">
-                <div class="table-container">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>id</th>
-                        <th>name</th>
-                        <th>whatsapp_id</th>
-                        <th>level_id</th>
-                        <th>created_at</th>
-                        <th>updated_at</th>
-                        <th style="width: 100px;">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody id="fullMemberTableBody"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <!-- Table: member_campaign_claim -->
-            <div class="card detail-view-table" id="view-table-campaign-claim" style="display: none;">
-              <div class="card-header">
-                <div class="card-title"><span class="card-icon">🎫</span> Tabel: member_campaign_claim</div>
-                <button class="btn btn-primary btn-sm" onclick="openAddModal('claim')">➕ Tambah member_campaign_claim</button>
-              </div>
-              <div class="card-body">
-                <div class="table-container">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>id</th>
-                        <th>member_id</th>
-                        <th>campaign_code</th>
-                        <th>claimed_at</th>
-                        <th style="width: 100px;">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody id="fullCampaignClaimTableBody"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <!-- Table: member_transaction_history -->
-            <div class="card detail-view-table" id="view-table-transaction" style="display: none;">
-              <div class="card-header">
-                <div class="card-title"><span class="card-icon">💰</span> Tabel: member_transaction_history</div>
-                <button class="btn btn-primary btn-sm" onclick="openAddModal('tx')">➕ Tambah member_transaction_history</button>
-              </div>
-              <div class="card-body">
-                <div class="table-container">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>id</th>
-                        <th>member_id</th>
-                        <th>transaction_code</th>
-                        <th>total_amount</th>
-                        <th>transaction_date</th>
-                        <th style="width: 100px;">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody id="fullTransactionTableBody"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <!-- Table: member_level -->
-            <div class="card detail-view-table" id="view-table-level" style="display: none;">
-              <div class="card-header">
-                <div class="card-title"><span class="card-icon">🏅</span> Tabel: member_level</div>
-                <button class="btn btn-primary btn-sm" onclick="openAddModal('level')">➕ Tambah member_level</button>
-              </div>
-              <div class="card-body">
-                <div class="table-container">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>id</th>
-                        <th>level_name</th>
-                        <th>min_transaction</th>
-                        <th>benefit_description</th>
-                        <th style="width: 100px;">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody id="fullLevelTableBody"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
+          <div class="header-right">
+            <span class="date-display" id="dateDisplay"></span>
+            <button class="header-btn" title="Notifikasi" id="notifBtn">
+              🔔
+              <span class="notif-dot"></span>
+            </button>
+            <button class="header-btn" title="Refresh Data" id="refreshBtn">
+              🔄
+            </button>
           </div>
-        </section>
+        </header>
 
-        <!-- ==================== -->
-        <!-- 2. DASBOR PROMO      -->
-        <!-- ==================== -->
-        <section class="dashboard-section" id="section-promo">
-          <!-- Campaign Status Widget -->
-          <div class="widgets-grid" style="grid-template-columns: 1fr 2fr;">
-            <div class="widget-card widget-cyan">
-              <div class="widget-header">
-                <div class="widget-icon">📢</div>
-              </div>
-              <div class="campaign-status-widget">
-                <div class="campaign-ring" id="campaignRing">
-                  <svg width="100" height="100" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#ringGradient)" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="99" stroke-linecap="round" id="ringProgress"/>
-                    <defs>
-                      <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stop-color="#00d4ff"/>
-                        <stop offset="100%" stop-color="#6385ff"/>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <div class="campaign-ring-text">
-                    <span class="ring-value" id="ringActiveCount">5</span>
-                    <span class="ring-label">Aktif</span>
+        <!-- Page Content -->
+        <div class="page-content">
+          <!-- ==================== -->
+          <!-- 1. DASBOR MEMBER     -->
+          <!-- ==================== -->
+          <section class="dashboard-section active" id="section-member">
+            <!-- MASTER VIEW -->
+            <div id="memberMasterView">
+              <!-- Widgets -->
+              <div class="widgets-grid">
+                <div
+                  class="widget-card widget-blue clickable-widget"
+                  id="widget-member"
+                >
+                  <div class="widget-header">
+                    <div class="widget-icon">👥</div>
                   </div>
+                  <div class="widget-value" id="w-total-members">0</div>
+                  <div class="widget-label">member</div>
                 </div>
-                <div class="campaign-status-details">
-                  <div class="status-item">
-                    <span class="status-color" style="background:var(--accent-green)"></span>
-                    <span id="statusActive">5 Campaign Aktif</span>
+                <div
+                  class="widget-card widget-purple clickable-widget"
+                  id="widget-campaign-claim"
+                >
+                  <div class="widget-header">
+                    <div class="widget-icon">🎫</div>
                   </div>
-                  <div class="status-item">
-                    <span class="status-color" style="background:var(--accent-red)"></span>
-                    <span id="statusExpired">3 Campaign Expired</span>
+                  <div class="widget-value" id="w-campaign-claims">0</div>
+                  <div class="widget-label">member_campaign_claim</div>
+                </div>
+                <div
+                  class="widget-card widget-green clickable-widget"
+                  id="widget-transaction"
+                >
+                  <div class="widget-header">
+                    <div class="widget-icon">💰</div>
                   </div>
-                  <div class="status-item">
-                    <span class="status-color" style="background:var(--accent-cyan)"></span>
-                    <span id="statusTotalClaims">508 Total Klaim</span>
+                  <div class="widget-value" id="w-transactions">0</div>
+                  <div class="widget-label">member_transaction_history</div>
+                </div>
+                <div
+                  class="widget-card widget-orange clickable-widget"
+                  id="widget-level"
+                >
+                  <div class="widget-header">
+                    <div class="widget-icon">🏅</div>
                   </div>
+                  <div class="widget-value" id="w-levels">4</div>
+                  <div class="widget-label">member_level</div>
                 </div>
               </div>
-            </div>
 
-            <!-- Campaign Form -->
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title"><span class="card-icon">➕</span> Buat Campaign Baru</div>
-              </div>
-              <div class="card-body">
-                <form id="campaignForm">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Kode Campaign</label>
-                      <input type="text" class="form-input" id="campCode" placeholder="Contoh: PROMO20" required>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Nama Campaign</label>
-                      <input type="text" class="form-input" id="campName" placeholder="Nama campaign" required>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Isi Pesan Blast</label>
-                    <textarea class="form-textarea" id="campMessage" placeholder="Tulis pesan blast WhatsApp..." required></textarea>
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Diskon (%)</label>
-                      <input type="number" class="form-input" id="campDiscount" placeholder="10" min="1" max="100" required>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Tanggal Expired</label>
-                      <input type="date" class="form-input" id="campExpDate" required>
-                    </div>
-                  </div>
-                  <button type="submit" class="btn btn-primary">➕ Simpan Campaign</button>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <!-- Campaign Table -->
-          <div class="card mt-3">
-            <div class="card-header">
-              <div class="card-title"><span class="card-icon">🎯</span> Daftar Campaign</div>
-              <div class="filter-bar" style="margin-bottom:0;">
-                <button class="filter-chip active" data-filter="all">Semua</button>
-                <button class="filter-chip" data-filter="Aktif">Aktif</button>
-                <button class="filter-chip" data-filter="Expired">Expired</button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="table-container">
-                <table class="data-table" id="campaignTable">
-                  <thead>
-                    <tr>
-                      <th>Kode</th>
-                      <th>Nama Campaign</th>
-                      <th>Isi Pesan Blast</th>
-                      <th>Diskon</th>
-                      <th>Status</th>
-                      <th>Exp. Date</th>
-                      <th>Klaim</th>
-                      <th>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody id="campaignTableBody"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ==================== -->
-        <!-- 3. DASBOR LAPORAN    -->
-        <!-- ==================== -->
-        <section class="dashboard-section" id="section-laporan">
-          <!-- Tabs -->
-          <div class="tabs" id="laporanTabs">
-            <button class="tab active" data-tab="tab-campaign">📊 Laporan Campaign</button>
-            <button class="tab" data-tab="tab-followup">💬 Follow Up Chat</button>
-            <button class="tab" data-tab="tab-stok">📦 Stok Habis</button>
-            <button class="tab" data-tab="tab-aisummary">🤖 AI Daily Summary</button>
-            <button class="tab" data-tab="tab-activitylog">📋 Activity Log</button>
-          </div>
-
-          <!-- Tab: Laporan Campaign -->
-          <div class="tab-content active" id="tab-campaign">
-            <div class="grid-2 section-gap">
-              <!-- Chart -->
-              <div class="card">
+              <!-- Member Table -->
+              <div class="card mt-3">
                 <div class="card-header">
-                  <div class="card-title"><span class="card-icon">📈</span> Campaign Claim Terbanyak</div>
+                  <div class="card-title">
+                    <span class="card-icon">👥</span> Daftar Member
+                  </div>
+                  <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input
+                      type="text"
+                      placeholder="Cari member..."
+                      id="memberSearch"
+                    />
+                  </div>
                 </div>
                 <div class="card-body">
-                  <div class="chart-container">
-                    <canvas id="campaignClaimChart"></canvas>
+                  <div class="table-container">
+                    <table class="data-table" id="memberTable">
+                      <thead>
+                        <tr>
+                          <th>Nama</th>
+                          <th>No. WhatsApp</th>
+                          <th>Level</th>
+                          <th>Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="memberTableBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="card-footer">
+                  <span
+                    class="text-muted"
+                    style="font-size: 0.78rem; color: var(--text-muted)"
+                    id="memberCount"
+                    >0 member</span
+                  >
+                  <div class="pagination" id="memberPagination"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DETAIL VIEWS (Widget Tables) -->
+            <div id="memberDetailViews" style="display: none">
+              <button class="btn btn-secondary mb-3" id="btnBackToMemberMaster">
+                ⬅ Kembali
+              </button>
+
+              <!-- Table: member -->
+              <div
+                class="card detail-view-table"
+                id="view-table-member"
+                style="display: none"
+              >
+                <div class="card-header">
+                  <div class="card-title">
+                    <span class="card-icon">👥</span> Tabel: member
+                  </div>
+                  <button
+                    class="btn btn-primary btn-sm"
+                    onclick="openAddModal('member')"
+                  >
+                    ➕ Tambah member
+                  </button>
+                </div>
+                <div class="card-body">
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>id</th>
+                          <th>name</th>
+                          <th>whatsapp_id</th>
+                          <th>level_id</th>
+                          <th>created_at</th>
+                          <th>updated_at</th>
+                          <th style="width: 100px">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="fullMemberTableBody"></tbody>
+                    </table>
                   </div>
                 </div>
               </div>
 
-              <!-- Leaderboard -->
+              <!-- Table: member_campaign_claim -->
+              <div
+                class="card detail-view-table"
+                id="view-table-campaign-claim"
+                style="display: none"
+              >
+                <div class="card-header">
+                  <div class="card-title">
+                    <span class="card-icon">🎫</span> Tabel:
+                    member_campaign_claim
+                  </div>
+                  <button
+                    class="btn btn-primary btn-sm"
+                    onclick="openAddModal('claim')"
+                  >
+                    ➕ Tambah member_campaign_claim
+                  </button>
+                </div>
+                <div class="card-body">
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>id</th>
+                          <th>member_id</th>
+                          <th>campaign_code</th>
+                          <th>claimed_at</th>
+                          <th style="width: 100px">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="fullCampaignClaimTableBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Table: member_transaction_history -->
+              <div
+                class="card detail-view-table"
+                id="view-table-transaction"
+                style="display: none"
+              >
+                <div class="card-header">
+                  <div class="card-title">
+                    <span class="card-icon">💰</span> Tabel:
+                    member_transaction_history
+                  </div>
+                  <button
+                    class="btn btn-primary btn-sm"
+                    onclick="openAddModal('tx')"
+                  >
+                    ➕ Tambah member_transaction_history
+                  </button>
+                </div>
+                <div class="card-body">
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>id</th>
+                          <th>member_id</th>
+                          <th>transaction_code</th>
+                          <th>total_amount</th>
+                          <th>transaction_date</th>
+                          <th style="width: 100px">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="fullTransactionTableBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Table: member_level -->
+              <div
+                class="card detail-view-table"
+                id="view-table-level"
+                style="display: none"
+              >
+                <div class="card-header">
+                  <div class="card-title">
+                    <span class="card-icon">🏅</span> Tabel: member_level
+                  </div>
+                  <button
+                    class="btn btn-primary btn-sm"
+                    onclick="openAddModal('level')"
+                  >
+                    ➕ Tambah member_level
+                  </button>
+                </div>
+                <div class="card-body">
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>id</th>
+                          <th>level_name</th>
+                          <th>min_transaction</th>
+                          <th>benefit_description</th>
+                          <th style="width: 100px">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="fullLevelTableBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==================== -->
+          <!-- 2. DASBOR PROMO      -->
+          <!-- ==================== -->
+          <section class="dashboard-section" id="section-promo">
+            <!-- Campaign Status Widget -->
+            <div class="widgets-grid" style="grid-template-columns: 1fr 2fr">
+              <div class="widget-card widget-cyan">
+                <div class="widget-header">
+                  <div class="widget-icon">📢</div>
+                </div>
+                <div class="campaign-status-widget">
+                  <div class="campaign-ring" id="campaignRing">
+                    <svg width="100" height="100" viewBox="0 0 100 100">
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="42"
+                        fill="none"
+                        stroke="rgba(255,255,255,0.05)"
+                        stroke-width="8"
+                      />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="42"
+                        fill="none"
+                        stroke="url(#ringGradient)"
+                        stroke-width="8"
+                        stroke-dasharray="264"
+                        stroke-dashoffset="99"
+                        stroke-linecap="round"
+                        id="ringProgress"
+                      />
+                      <defs>
+                        <linearGradient
+                          id="ringGradient"
+                          x1="0%"
+                          y1="0%"
+                          x2="100%"
+                          y2="0%"
+                        >
+                          <stop offset="0%" stop-color="#00d4ff" />
+                          <stop offset="100%" stop-color="#6385ff" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div class="campaign-ring-text">
+                      <span class="ring-value" id="ringActiveCount">5</span>
+                      <span class="ring-label">Aktif</span>
+                    </div>
+                  </div>
+                  <div class="campaign-status-details">
+                    <div class="status-item">
+                      <span
+                        class="status-color"
+                        style="background: var(--accent-green)"
+                      ></span>
+                      <span id="statusActive">5 Campaign Aktif</span>
+                    </div>
+                    <div class="status-item">
+                      <span
+                        class="status-color"
+                        style="background: var(--accent-red)"
+                      ></span>
+                      <span id="statusExpired">3 Campaign Expired</span>
+                    </div>
+                    <div class="status-item">
+                      <span
+                        class="status-color"
+                        style="background: var(--accent-cyan)"
+                      ></span>
+                      <span id="statusTotalClaims">508 Total Klaim</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Campaign Form -->
               <div class="card">
                 <div class="card-header">
-                  <div class="card-title"><span class="card-icon">🏆</span> Leaderboard Campaign</div>
+                  <div class="card-title">
+                    <span class="card-icon">➕</span> Buat Campaign Baru
+                  </div>
                 </div>
-                <div class="card-body" id="campaignLeaderboard"></div>
+                <div class="card-body">
+                  <form id="campaignForm">
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label class="form-label">Kode Campaign</label>
+                        <input
+                          type="text"
+                          class="form-input"
+                          id="campCode"
+                          placeholder="Contoh: PROMO20"
+                          required
+                        />
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Nama Campaign</label>
+                        <input
+                          type="text"
+                          class="form-input"
+                          id="campName"
+                          placeholder="Nama campaign"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Isi Pesan Blast</label>
+                      <textarea
+                        class="form-textarea"
+                        id="campMessage"
+                        placeholder="Tulis pesan blast WhatsApp..."
+                        required
+                      ></textarea>
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label class="form-label">Diskon (%)</label>
+                        <input
+                          type="number"
+                          class="form-input"
+                          id="campDiscount"
+                          placeholder="10"
+                          min="1"
+                          max="100"
+                          required
+                        />
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Tanggal Expired</label>
+                        <input
+                          type="date"
+                          class="form-input"
+                          id="campExpDate"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                      ➕ Simpan Campaign
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Tab: Follow Up Chat -->
-          <div class="tab-content" id="tab-followup">
-            <div class="card">
+            <!-- Campaign Table -->
+            <div class="card mt-3">
               <div class="card-header">
-                <div class="card-title"><span class="card-icon">💬</span> Laporan Chat Follow Up Client</div>
-                <div class="filter-bar" style="margin-bottom:0;">
-                  <button class="filter-chip active" data-followup-filter="all">Semua</button>
-                  <button class="filter-chip" data-followup-filter="Pending">Pending</button>
-                  <button class="filter-chip" data-followup-filter="Follow Up">Follow Up</button>
-                  <button class="filter-chip" data-followup-filter="Escalated">Escalated</button>
+                <div class="card-title">
+                  <span class="card-icon">🎯</span> Daftar Campaign
+                </div>
+                <div class="filter-bar" style="margin-bottom: 0">
+                  <button class="filter-chip active" data-filter="all">
+                    Semua
+                  </button>
+                  <button class="filter-chip" data-filter="Aktif">Aktif</button>
+                  <button class="filter-chip" data-filter="Expired">
+                    Expired
+                  </button>
                 </div>
               </div>
               <div class="card-body">
                 <div class="table-container">
-                  <table class="data-table">
+                  <table class="data-table" id="campaignTable">
                     <thead>
                       <tr>
-                        <th>Member</th>
-                        <th>Terakhir Chat</th>
-                        <th>Topik</th>
+                        <th>Kode</th>
+                        <th>Nama Campaign</th>
+                        <th>Isi Pesan Blast</th>
+                        <th>Diskon</th>
                         <th>Status</th>
-                        <th>Agent</th>
-                      </tr>
-                    </thead>
-                    <tbody id="followUpTableBody"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tab: Stok Habis -->
-          <div class="tab-content" id="tab-stok">
-            <div class="connection-banner">
-              <span class="conn-icon">🔗</span>
-              <span class="conn-text">Koneksi ke Accurate Online</span>
-              <span class="conn-status">
-                <span class="status-dot online"></span>
-                Terhubung
-              </span>
-            </div>
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title"><span class="card-icon">📦</span> Laporan Stok</div>
-                <div class="filter-bar" style="margin-bottom:0;">
-                  <button class="filter-chip active" data-stock-filter="all">Semua</button>
-                  <button class="filter-chip" data-stock-filter="Habis">Habis</button>
-                  <button class="filter-chip" data-stock-filter="Hampir Habis">Hampir Habis</button>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="table-container">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>SKU</th>
-                        <th>Nama Produk</th>
-                        <th>Stok</th>
-                        <th>Min. Stok</th>
-                        <th>Unit</th>
-                        <th>Status</th>
-                        <th>Update Terakhir</th>
-                      </tr>
-                    </thead>
-                    <tbody id="stockTableBody"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tab: AI Daily Summary -->
-          <div class="tab-content" id="tab-aisummary">
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title"><span class="card-icon">🤖</span> AI Daily Summary</div>
-              </div>
-              <div class="card-body" id="aiSummaryContainer"></div>
-            </div>
-          </div>
-
-          <!-- Tab: Activity Log -->
-          <div class="tab-content" id="tab-activitylog">
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title"><span class="card-icon">📋</span> Activity Log</div>
-                <div class="filter-bar" style="margin-bottom:0;">
-                  <button class="filter-chip active" data-log-filter="all">Semua</button>
-                  <button class="filter-chip" data-log-filter="Auth">Auth</button>
-                  <button class="filter-chip" data-log-filter="Campaign">Campaign</button>
-                  <button class="filter-chip" data-log-filter="Chat">Chat</button>
-                  <button class="filter-chip" data-log-filter="Member">Member</button>
-                  <button class="filter-chip" data-log-filter="Stock">Stock</button>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="table-container">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>Waktu</th>
-                        <th>User</th>
+                        <th>Exp. Date</th>
+                        <th>Klaim</th>
                         <th>Aksi</th>
-                        <th>Detail</th>
-                        <th>Kategori</th>
                       </tr>
                     </thead>
-                    <tbody id="activityLogBody"></tbody>
+                    <tbody id="campaignTableBody"></tbody>
                   </table>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- ======================= -->
-        <!-- 4. DASBOR MANAJEMEN AKUN -->
-        <!-- ======================= -->
-        <section class="dashboard-section" id="section-akun">
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title"><span class="card-icon">⚙️</span> System Users</div>
-              <button class="btn btn-primary btn-sm" id="addUserBtn">➕ Tambah User</button>
+          <!-- ==================== -->
+          <!-- 3. DASBOR LAPORAN    -->
+          <!-- ==================== -->
+          <section class="dashboard-section" id="section-laporan">
+            <!-- Tabs -->
+            <div class="tabs" id="laporanTabs">
+              <button class="tab active" data-tab="tab-campaign">
+                📊 Laporan Campaign
+              </button>
+              <button class="tab" data-tab="tab-followup">
+                💬 Follow Up Chat
+              </button>
+              <button class="tab" data-tab="tab-stok">📦 Stok Habis</button>
+              <button class="tab" data-tab="tab-aisummary">
+                🤖 AI Daily Summary
+              </button>
+              <button class="tab" data-tab="tab-activitylog">
+                📋 Activity Log
+              </button>
             </div>
-            <div class="card-body">
-              <div class="table-container">
-                <table class="data-table" id="usersTable">
-                  <thead>
-                    <tr>
-                      <th>No</th>
-                      <th>Nama</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                      <th>Login Terakhir</th>
-                      <th>Dibuat</th>
-                      <th>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody id="usersTableBody"></tbody>
-                </table>
+
+            <!-- Tab: Laporan Campaign -->
+            <div class="tab-content active" id="tab-campaign">
+              <div class="grid-2 section-gap">
+                <!-- Chart -->
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <span class="card-icon">📈</span> Campaign Claim Terbanyak
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="chart-container">
+                      <canvas id="campaignClaimChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Leaderboard -->
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title">
+                      <span class="card-icon">🏆</span> Leaderboard Campaign
+                    </div>
+                  </div>
+                  <div class="card-body" id="campaignLeaderboard"></div>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
 
-      </div>
-    </main>
-  </div>
+            <!-- Tab: Follow Up Chat -->
+            <div class="tab-content" id="tab-followup">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <span class="card-icon">💬</span> Laporan Chat Follow Up
+                    Client
+                  </div>
+                  <div class="filter-bar" style="margin-bottom: 0">
+                    <button
+                      class="filter-chip active"
+                      data-followup-filter="all"
+                    >
+                      Semua
+                    </button>
+                    <button class="filter-chip" data-followup-filter="Pending">
+                      Pending
+                    </button>
+                    <button
+                      class="filter-chip"
+                      data-followup-filter="Follow Up"
+                    >
+                      Follow Up
+                    </button>
+                    <button
+                      class="filter-chip"
+                      data-followup-filter="Escalated"
+                    >
+                      Escalated
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>Member</th>
+                          <th>Terakhir Chat</th>
+                          <th>Topik</th>
+                          <th>Status</th>
+                          <th>Agent</th>
+                        </tr>
+                      </thead>
+                      <tbody id="followUpTableBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-  <!-- ============ MODALS ============ -->
+            <!-- Tab: Stok Habis -->
+            <div class="tab-content" id="tab-stok">
+              <div class="connection-banner">
+                <span class="conn-icon">🔗</span>
+                <span class="conn-text">Koneksi ke Accurate Online</span>
+                <span class="conn-status">
+                  <span class="status-dot online"></span>
+                  Terhubung
+                </span>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <span class="card-icon">📦</span> Laporan Stok
+                  </div>
+                  <div class="filter-bar" style="margin-bottom: 0">
+                    <button class="filter-chip active" data-stock-filter="all">
+                      Semua
+                    </button>
+                    <button class="filter-chip" data-stock-filter="Habis">
+                      Habis
+                    </button>
+                    <button
+                      class="filter-chip"
+                      data-stock-filter="Hampir Habis"
+                    >
+                      Hampir Habis
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>SKU</th>
+                          <th>Nama Produk</th>
+                          <th>Stok</th>
+                          <th>Min. Stok</th>
+                          <th>Unit</th>
+                          <th>Status</th>
+                          <th>Update Terakhir</th>
+                        </tr>
+                      </thead>
+                      <tbody id="stockTableBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-  <!-- Member Detail Modal -->
-  <div class="modal-overlay" id="memberDetailModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="memberDetailTitle">Detail Member</h3>
-        <button class="modal-close" onclick="closeModal('memberDetailModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="tabs" id="memberDetailTabs">
-          <button class="tab active" data-member-tab="member-claims">🎫 Campaign Claims</button>
-          <button class="tab" data-member-tab="member-transactions">💰 Riwayat Transaksi</button>
+            <!-- Tab: AI Daily Summary -->
+            <div class="tab-content" id="tab-aisummary">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <span class="card-icon">🤖</span> AI Daily Summary
+                  </div>
+                </div>
+                <div class="card-body" id="aiSummaryContainer"></div>
+              </div>
+            </div>
+
+            <!-- Tab: Activity Log -->
+            <div class="tab-content" id="tab-activitylog">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">
+                    <span class="card-icon">📋</span> Activity Log
+                  </div>
+                  <div class="filter-bar" style="margin-bottom: 0">
+                    <button class="filter-chip active" data-log-filter="all">
+                      Semua
+                    </button>
+                    <button class="filter-chip" data-log-filter="Auth">
+                      Auth
+                    </button>
+                    <button class="filter-chip" data-log-filter="Campaign">
+                      Campaign
+                    </button>
+                    <button class="filter-chip" data-log-filter="Chat">
+                      Chat
+                    </button>
+                    <button class="filter-chip" data-log-filter="Member">
+                      Member
+                    </button>
+                    <button class="filter-chip" data-log-filter="Stock">
+                      Stock
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="table-container">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>Waktu</th>
+                          <th>User</th>
+                          <th>Aksi</th>
+                          <th>Detail</th>
+                          <th>Kategori</th>
+                        </tr>
+                      </thead>
+                      <tbody id="activityLogBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ======================= -->
+          <!-- 4. DASBOR MANAJEMEN AKUN -->
+          <!-- ======================= -->
+          <section class="dashboard-section" id="section-akun">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">
+                  <span class="card-icon">⚙️</span> System Users
+                </div>
+                <button class="btn btn-primary btn-sm" id="addUserBtn">
+                  ➕ Tambah User
+                </button>
+              </div>
+              <div class="card-body">
+                <div class="table-container">
+                  <table class="data-table" id="usersTable">
+                    <thead>
+                      <tr>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Login Terakhir</th>
+                        <th>Dibuat</th>
+                        <th>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-        <div class="tab-content active" id="member-claims">
+      </main>
+    </div>
+
+    <!-- ============ MODALS ============ -->
+
+    <!-- Member Detail Modal -->
+    <div class="modal-overlay" id="memberDetailModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="memberDetailTitle">Detail Member</h3>
+          <button class="modal-close" onclick="closeModal('memberDetailModal')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="tabs" id="memberDetailTabs">
+            <button class="tab active" data-member-tab="member-claims">
+              🎫 Campaign Claims
+            </button>
+            <button class="tab" data-member-tab="member-transactions">
+              💰 Riwayat Transaksi
+            </button>
+          </div>
+          <div class="tab-content active" id="member-claims">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>id</th>
+                    <th>member_id</th>
+                    <th>campaign_code</th>
+                    <th>claimed_at</th>
+                  </tr>
+                </thead>
+                <tbody id="memberClaimsBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-content" id="member-transactions">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>id</th>
+                    <th>member_id</th>
+                    <th>transaction_code</th>
+                    <th>total_amount</th>
+                    <th>transaction_date</th>
+                  </tr>
+                </thead>
+                <tbody id="memberTransactionsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campaign Detail Modal -->
+    <div class="modal-overlay" id="campaignDetailModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="campaignDetailTitle">Detail Campaign</h3>
+          <button
+            class="modal-close"
+            onclick="closeModal('campaignDetailModal')"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
           <div class="table-container">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>id</th>
-                  <th>member_id</th>
-                  <th>campaign_code</th>
-                  <th>claimed_at</th>
+                  <th>Member</th>
+                  <th>Tanggal Klaim</th>
+                  <th>Tanggal Digunakan</th>
+                  <th>Status</th>
                 </tr>
               </thead>
-              <tbody id="memberClaimsBody"></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="tab-content" id="member-transactions">
-          <div class="table-container">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>id</th>
-                  <th>member_id</th>
-                  <th>transaction_code</th>
-                  <th>total_amount</th>
-                  <th>transaction_date</th>
-                </tr>
-              </thead>
-              <tbody id="memberTransactionsBody"></tbody>
+              <tbody id="campaignHistoryBody"></tbody>
             </table>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Campaign Detail Modal -->
-  <div class="modal-overlay" id="campaignDetailModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="campaignDetailTitle">Detail Campaign</h3>
-        <button class="modal-close" onclick="closeModal('campaignDetailModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Member</th>
-                <th>Tanggal Klaim</th>
-                <th>Tanggal Digunakan</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="campaignHistoryBody"></tbody>
-          </table>
+    <!-- Add User Modal -->
+    <div class="modal-overlay" id="addUserModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Tambah User Baru</h3>
+          <button class="modal-close" onclick="closeModal('addUserModal')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="addUserForm">
+            <div class="form-group">
+              <label class="form-label">Nama Lengkap</label>
+              <input
+                type="text"
+                class="form-input"
+                id="newUserName"
+                placeholder="Nama lengkap"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input
+                type="email"
+                class="form-input"
+                id="newUserEmail"
+                placeholder="email@example.com"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Role</label>
+              <select class="form-select" id="newUserRole" required>
+                <option value="">Pilih role...</option>
+                <option value="Admin">Admin</option>
+                <option value="Agent">Agent</option>
+                <option value="Marketing">Marketing</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('addUserModal')"
+          >
+            Batal
+          </button>
+          <button class="btn btn-primary" id="saveUserBtn">💾 Simpan</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Add User Modal -->
-  <div class="modal-overlay" id="addUserModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Tambah User Baru</h3>
-        <button class="modal-close" onclick="closeModal('addUserModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <form id="addUserForm">
-          <div class="form-group">
-            <label class="form-label">Nama Lengkap</label>
-            <input type="text" class="form-input" id="newUserName" placeholder="Nama lengkap" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-input" id="newUserEmail" placeholder="email@example.com" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Role</label>
-            <select class="form-select" id="newUserRole" required>
-              <option value="">Pilih role...</option>
-              <option value="Admin">Admin</option>
-              <option value="Agent">Agent</option>
-              <option value="Marketing">Marketing</option>
-            </select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('addUserModal')">Batal</button>
-        <button class="btn btn-primary" id="saveUserBtn">💾 Simpan</button>
+    <!-- Modal Tambah Member -->
+    <div class="modal-overlay" id="modalAddMember">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="modalMemberTitle">Tambah member</h3>
+          <button class="modal-close" onclick="closeModal('modalAddMember')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="formAddMember">
+            <div class="form-group">
+              <label class="form-label">name</label>
+              <input type="text" class="form-input" id="fmName" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">whatsapp_id</label>
+              <input
+                type="text"
+                class="form-input"
+                id="fmWa"
+                placeholder="628..."
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">level_id</label>
+              <select class="form-select" id="fmLevel" required>
+                <!-- Options will be populated dynamically via JS -->
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('modalAddMember')"
+          >
+            Batal
+          </button>
+          <button class="btn btn-primary" form="formAddMember">
+            💾 Simpan
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Modal Tambah Member -->
-  <div class="modal-overlay" id="modalAddMember">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="modalMemberTitle">Tambah member</h3>
-        <button class="modal-close" onclick="closeModal('modalAddMember')">✕</button>
-      </div>
-      <div class="modal-body">
-        <form id="formAddMember">
-          <div class="form-group">
-            <label class="form-label">name</label>
-            <input type="text" class="form-input" id="fmName" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">whatsapp_id</label>
-            <input type="text" class="form-input" id="fmWa" placeholder="628..." required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">level_id</label>
-            <select class="form-select" id="fmLevel" required>
-              <!-- Options will be populated dynamically via JS -->
-            </select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalAddMember')">Batal</button>
-        <button class="btn btn-primary" form="formAddMember">💾 Simpan</button>
+    <!-- Modal Tambah Campaign Claim -->
+    <div class="modal-overlay" id="modalAddCampaignClaim">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="modalClaimTitle">Tambah member_campaign_claim</h3>
+          <button
+            class="modal-close"
+            onclick="closeModal('modalAddCampaignClaim')"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="formAddCampaignClaim">
+            <div class="form-group">
+              <label class="form-label">member_id</label>
+              <input
+                type="number"
+                class="form-input"
+                id="fccMemberId"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">campaign_code</label>
+              <input type="text" class="form-input" id="fccCampCode" required />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('modalAddCampaignClaim')"
+          >
+            Batal
+          </button>
+          <button class="btn btn-primary" form="formAddCampaignClaim">
+            💾 Simpan
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Modal Tambah Campaign Claim -->
-  <div class="modal-overlay" id="modalAddCampaignClaim">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="modalClaimTitle">Tambah member_campaign_claim</h3>
-        <button class="modal-close" onclick="closeModal('modalAddCampaignClaim')">✕</button>
-      </div>
-      <div class="modal-body">
-        <form id="formAddCampaignClaim">
-          <div class="form-group">
-            <label class="form-label">member_id</label>
-            <input type="number" class="form-input" id="fccMemberId" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">campaign_code</label>
-            <input type="text" class="form-input" id="fccCampCode" required>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalAddCampaignClaim')">Batal</button>
-        <button class="btn btn-primary" form="formAddCampaignClaim">💾 Simpan</button>
+    <!-- Modal Tambah Transaction History -->
+    <div class="modal-overlay" id="modalAddTransaction">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="modalTxTitle">Tambah member_transaction_history</h3>
+          <button
+            class="modal-close"
+            onclick="closeModal('modalAddTransaction')"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="formAddTransaction">
+            <div class="form-group">
+              <label class="form-label">member_id</label>
+              <input
+                type="number"
+                class="form-input"
+                id="ftMemberId"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">transaction_code</label>
+              <input type="text" class="form-input" id="ftCode" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">total_amount</label>
+              <input type="number" class="form-input" id="ftAmount" required />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('modalAddTransaction')"
+          >
+            Batal
+          </button>
+          <button class="btn btn-primary" form="formAddTransaction">
+            💾 Simpan
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Modal Tambah Transaction History -->
-  <div class="modal-overlay" id="modalAddTransaction">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="modalTxTitle">Tambah member_transaction_history</h3>
-        <button class="modal-close" onclick="closeModal('modalAddTransaction')">✕</button>
-      </div>
-      <div class="modal-body">
-        <form id="formAddTransaction">
-          <div class="form-group">
-            <label class="form-label">member_id</label>
-            <input type="number" class="form-input" id="ftMemberId" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">transaction_code</label>
-            <input type="text" class="form-input" id="ftCode" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">total_amount</label>
-            <input type="number" class="form-input" id="ftAmount" required>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalAddTransaction')">Batal</button>
-        <button class="btn btn-primary" form="formAddTransaction">💾 Simpan</button>
+    <!-- Modal Tambah Level -->
+    <div class="modal-overlay" id="modalAddLevel">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="modalLevelTitle">Tambah member_level</h3>
+          <button class="modal-close" onclick="closeModal('modalAddLevel')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="formAddLevel">
+            <div class="form-group">
+              <label class="form-label">level_name</label>
+              <input type="text" class="form-input" id="flName" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">min_transaction</label>
+              <input type="number" class="form-input" id="flMinTx" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">benefit_description</label>
+              <textarea class="form-textarea" id="flDesc" required></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('modalAddLevel')"
+          >
+            Batal
+          </button>
+          <button class="btn btn-primary" form="formAddLevel">💾 Simpan</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Modal Tambah Level -->
-  <div class="modal-overlay" id="modalAddLevel">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="modalLevelTitle">Tambah member_level</h3>
-        <button class="modal-close" onclick="closeModal('modalAddLevel')">✕</button>
-      </div>
-      <div class="modal-body">
-        <form id="formAddLevel">
-          <div class="form-group">
-            <label class="form-label">level_name</label>
-            <input type="text" class="form-input" id="flName" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">min_transaction</label>
-            <input type="number" class="form-input" id="flMinTx" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">benefit_description</label>
-            <textarea class="form-textarea" id="flDesc" required></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalAddLevel')">Batal</button>
-        <button class="btn btn-primary" form="formAddLevel">💾 Simpan</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="data.js"></script>
-  <script src="app.js"></script>
-</body>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
 </html>
