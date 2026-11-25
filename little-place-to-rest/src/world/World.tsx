@@ -18,7 +18,9 @@ import { Island } from "./objects/Island";
 import { BreathingLight } from "./objects/BreathingLight";
 import { Butterflies, RARE_FLOWER } from "./objects/Butterflies";
 import { InteractiveCloud } from "./objects/InteractiveCloud";
+import { Lookout } from "./objects/Lookout";
 import { Props } from "./objects/Props";
+import { Surprises } from "./objects/Surprises";
 import { Pond } from "./objects/Pond";
 import { PondDock } from "./objects/PondDock";
 import { Trees } from "./objects/Trees";
@@ -71,7 +73,9 @@ export function World({ quality, settings }: { quality: Quality; settings: Quali
         message="Not everyone notices the little things. You did."
       />
       <Props shadows={settings.shadows} />
+      <Lookout shadows={settings.shadows} grass={Math.round(settings.grass * 0.09)} />
       <Butterflies />
+      <Surprises />
       <InteractiveCloud />
       <Motes kind="dust" count={settings.dust} />
       <Motes kind="firefly" count={settings.fireflies} />

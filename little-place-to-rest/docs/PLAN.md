@@ -191,7 +191,7 @@ sangat halus: amplitudo partikel ±15%, glow bunga. Tidak ada kedip.
 | M1 | **Vertical slice** | Setup proyek, sky, lighting, fog, pulau, rumput, pohon, bunga, awan, partikel, rumah (exterior), kolam dasar, camera rig, Arrival cinematic, explore orbit, interaksi bunga, UI dasar, tier kualitas dasar, `?debug` | ✅ |
 | M2 | Garden lengkap + Pond | Kupu-kupu, interaksi awan, navigasi antar-lokasi, kolam + shader air, latihan napas | ✅ |
 | M3 | Cottage + Letter | Pintu, interior, amplop 3D, surat | ✅ |
-| M4 | Surprises + Stay longer | 5 kejutan, lookout, transisi waktu | |
+| M4 | Surprises + Stay longer | 5 kejutan, lookout, transisi waktu | ✅ |
 | M5 | Audio | Player lengkap, persistensi, reaksi musik | |
 | M6 | Optimasi & aksesibilitas | Adaptive quality, reduced motion, fallback WebGL, uji browser | |
 | M7 | Polish | Refinement visual/animasi, uji responsif | |
@@ -234,3 +234,13 @@ angka FPS tidak. Gunakan `?debug` di HP asli untuk FPS nyata.
 - Kursi berlengan dari kotak mentah → rounded box (kain empuk); karpet bermotif "papan sasaran" → anyaman halus.
 - Shot teras terlalu dekat (dinding papan memenuhi layar) → kamera dimundurkan.
 - Catatan QA: di sandbox 1–2 fps kamera ter-damp tertinggal jauh dari target; urutan & state diverifikasi lewat eval.
+
+### M4 — surprises & lookout (6 putaran QA)
+- Lookout pertama: kamera terlalu rendah, pulau memenuhi frame, jembatan tampak seperti dua tiang → pandangan
+  dinaikkan (langit dominan, matahari golden hour masuk frame), kamera digeser agar jembatan jadi garis diagonal.
+- Bintang harapan tak terlihat dari taman (view taman menunduk ~23°) → posisi dihitung dengan unproject agar
+  terlihat dari taman dan lookout.
+- Tepi persegi billboard bintang terlihat saat malam → falloff radial.
+- Glow affordance awan malam membuat garis tepi tiap puff → diganti pencerahan lembut merata.
+- Kejutan: bunga langka (lewat kupu-kupu), kelinci (lompat squash & stretch), lentera tersembunyi (menyala berkedip),
+  batu berpesan di lookout, bintang yang meluncur dengan jejak cahaya (hanya bisa disentuh saat malam).

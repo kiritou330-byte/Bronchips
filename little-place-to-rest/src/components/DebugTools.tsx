@@ -30,6 +30,19 @@ export function DebugBridge() {
         const v = new Vector3(x, y, z).project(camera);
         return [((v.x + 1) / 2) * window.innerWidth, ((1 - v.y) / 2) * window.innerHeight];
       },
+      /** World point along the camera ray through NDC (nx, ny) at a given distance. */
+      skyPoint: (nx: number, ny: number, dist: number) => {
+        const d = new Vector3(nx, ny, 0.5).unproject(camera).sub(camera.position).normalize();
+        return camera.position.clone().addScaledVector(d, dist).toArray().map((v) => +v.toFixed(2));
+      },
+      worldScreen: (x: number, y: number, z: number) => {
+        const v = new Vector3(x, y, z).project(camera);
+        return [((v.x + 1) / 2) * window.innerWidth, ((1 - v.y) / 2) * window.innerHeight];
+      },
+      groundScreen: (x: number, z: number, dy = 0.15) => {
+        const v = new Vector3(x, islandHeight(x, z) + dy, z).project(camera);
+        return [((v.x + 1) / 2) * window.innerWidth, ((1 - v.y) / 2) * window.innerHeight];
+      },
       envelopeScreen: () => {
         const v = new Vector3(...cottageToWorld(-0.2, 0.53, -0.48)).project(camera);
         return [((v.x + 1) / 2) * window.innerWidth, ((1 - v.y) / 2) * window.innerHeight];

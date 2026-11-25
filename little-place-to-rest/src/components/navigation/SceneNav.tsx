@@ -1,6 +1,6 @@
 "use client";
 
-import { Flower2, House, Waves } from "lucide-react";
+import { Flower2, House, Sunset, Waves } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { type Destination, destinationOf, useNavigation } from "@/state/navigation";
 import { goTo } from "@/world/director";
@@ -9,6 +9,7 @@ const places: { id: Destination; label: string; Icon: typeof Flower2 }[] = [
   { id: "garden", label: "Garden", Icon: Flower2 },
   { id: "pond", label: "Pond", Icon: Waves },
   { id: "cottage", label: "Cottage", Icon: House },
+  { id: "lookout", label: "Lookout", Icon: Sunset },
 ];
 
 /** Small, quiet way-finding. Only lists places that actually exist. */

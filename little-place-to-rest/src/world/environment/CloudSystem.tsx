@@ -193,7 +193,7 @@ export function createCloudMaterial(texture: CanvasTexture) {
         col += uSunColor * back * (1.0 - a) * 1.2;
         col = mix(col, uShade * 0.75 + uSkyTop * 0.25, uNight * 0.82);
         // Affordance shimmer for touchable clouds: warm light on thin edges.
-        col += vec3(1.0, 0.86, 0.62) * uGlow * (1.0 - a) * 0.9;
+        col = mix(col, vec3(1.0, 0.9, 0.74), uGlow * 0.3 * (1.0 - uNight * 0.6));
         // Exponential-squared fog, same as the scene.
         float f = 1.0 - exp(-uFogDensity * uFogDensity * vFogDepth * vFogDepth);
         col = mix(col, uFogColor, f);

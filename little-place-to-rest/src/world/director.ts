@@ -2,7 +2,18 @@ import { shots, type Shot, type Vec3 } from "@/config/world.config";
 import { useBreathing } from "@/state/breathing";
 import { type Destination, destinationOf, useNavigation } from "@/state/navigation";
 import { enterOrbit, flyTo, framing, initialExploreShot, orbitPosition, rig, setShot } from "./camera/rig";
-import { arcVia, dock, doorstepShot, insideShot, letterShot, pondSeatShot, thresholdPoint } from "./locations";
+import {
+  arcVia,
+  bridge,
+  bridgeVia,
+  dock,
+  doorstepShot,
+  insideShot,
+  letterShot,
+  lookoutShot,
+  pondSeatShot,
+  thresholdPoint,
+} from "./locations";
 import { cottageDoor } from "./objects/Cottage";
 
 /**
@@ -90,6 +101,16 @@ export async function goTo(dest: Destination) {
     return;
   }
 
+  if (dest === "lookout") {
+    nav.setPhase("lookout");
+    // Walk the bridge: rise over the near end, follow it across, settle on the bench.
+    const nearEnd: Vec3 = [bridge.from[0] - 1.2, bridge.from[1] + 1.8, bridge.from[2] + 0.6];
+    await fly(lookoutShot, here === "garden" ? 4.4 : 5.2, [arcVia(from, nearEnd, 1), nearEnd, bridgeVia], "power2.inOut", 0.45);
+    rig.parallaxAmount = 0.25;
+    nav.setTransitioning(false);
+    return;
+  }
+
   if (dest === "cottage") {
     nav.setPhase("cottage");
     await fly(doorstepShot, here === "pond" ? 3.0 : 3.4, [arcVia(from, doorstepShot.position, 2)]);
@@ -102,7 +123,13 @@ export async function goTo(dest: Destination) {
   }
 
   // Garden: rise from wherever we are, then settle into orbit.
-  const to = here === "pond" ? gardenShotFacing(dock.tip[0], dock.tip[1]) : gardenShotFacing(doorstepShot.position[0], doorstepShot.position[2]);
+  const to =
+    here === "pond"
+      ? gardenShotFacing(dock.tip[0], dock.tip[1])
+      : here === "lookout"
+        ? gardenShotFacing(bridge.from[0], bridge.from[2])
+        : gardenShotFacing(doorstepShot.position[0], doorstepShot.position[2]);
+  rig.parallaxAmount = 0;
   nav.setPhase("explore");
   await fly(to, 3.4, [arcVia(from, to.position, 1.5)]);
   enterOrbit();

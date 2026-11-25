@@ -4,10 +4,10 @@ import { create } from "zustand";
  * Where the visitor is in the experience. All "scenes" live in one persistent world;
  * a phase decides the camera mode and which UI is shown.
  */
-export type Phase = "arrival" | "entering" | "explore" | "pond" | "cottage" | "letter";
+export type Phase = "arrival" | "entering" | "explore" | "pond" | "cottage" | "letter" | "lookout";
 
 /** Places reachable from the navigation bar. */
-export type Destination = "garden" | "pond" | "cottage";
+export type Destination = "garden" | "pond" | "cottage" | "lookout";
 
 interface NavigationState {
   phase: Phase;
@@ -38,5 +38,6 @@ export function destinationOf(phase: Phase): Destination | null {
   if (phase === "explore") return "garden";
   if (phase === "pond") return "pond";
   if (phase === "cottage" || phase === "letter") return "cottage";
+  if (phase === "lookout") return "lookout";
   return null;
 }
