@@ -40,3 +40,36 @@ export function arcVia(from: Vec3, to: Vec3, lift = 4): Vec3 {
   const ground = islandHeight(mx, mz);
   return [mx, Math.max(from[1], to[1], ground + 2) + lift, mz];
 }
+
+// --- Cottage -------------------------------------------------------------------------
+const [CX, CZ] = layout.cottage.position;
+const CROT = layout.cottage.rotationY;
+export const cottageFloorY = islandHeight(CX, CZ);
+
+/** Cottage-local (origin = floor centre, door faces +z) → world. */
+export function cottageToWorld(x: number, y: number, z: number): Vec3 {
+  const c = Math.cos(CROT),
+    s = Math.sin(CROT);
+  return [CX + x * c + z * s, cottageFloorY + y, CZ - x * s + z * c];
+}
+
+/** Standing on the porch, facing the door. */
+export const doorstepShot: Shot = {
+  position: cottageToWorld(0.12, 1.25, 3.75),
+  target: cottageToWorld(0, 0.7, 1.3),
+  fov: 46,
+};
+/** Just through the doorway — the moment of stepping in. */
+export const thresholdPoint: Vec3 = cottageToWorld(0, 0.82, 1.05);
+/** Inside, from near the door: the whole little room. */
+export const insideShot: Shot = {
+  position: cottageToWorld(0.25, 1.02, 0.85),
+  target: cottageToWorld(-0.35, 0.5, -0.75),
+  fov: 62,
+};
+/** Close over the table, looking down at the envelope. */
+export const letterShot: Shot = {
+  position: cottageToWorld(-0.08, 1.02, -0.05),
+  target: cottageToWorld(-0.22, 0.5, -0.5),
+  fov: 40,
+};

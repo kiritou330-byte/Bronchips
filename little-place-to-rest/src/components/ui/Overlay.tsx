@@ -5,6 +5,8 @@ import { useNavigation } from "@/state/navigation";
 import { SceneNav } from "../navigation/SceneNav";
 import { ArrivalOverlay } from "./ArrivalOverlay";
 import { BreathingPanel } from "./BreathingPanel";
+import { CottagePanel } from "./CottagePanel";
+import { LetterOverlay } from "./LetterOverlay";
 import { ExploreHint } from "./ExploreHint";
 import { MessageToast } from "./MessageToast";
 
@@ -30,7 +32,7 @@ export function Overlay() {
       <AnimatePresence>{ready && phase === "arrival" && <ArrivalOverlay key="arrival" />}</AnimatePresence>
 
       <AnimatePresence>
-        {(phase === "explore" || phase === "pond") && (
+        {(phase === "explore" || phase === "pond" || phase === "cottage") && (
           <motion.div
             key="wordmark"
             className="absolute left-5 top-5 font-display text-[15px] italic tracking-wide text-[var(--ink)] [text-shadow:var(--shadow)] sm:left-8 sm:top-7 sm:text-[17px]"
@@ -45,6 +47,8 @@ export function Overlay() {
 
       <SceneNav />
       <BreathingPanel />
+      <CottagePanel />
+      <LetterOverlay />
       <ExploreHint />
       <MessageToast />
     </div>

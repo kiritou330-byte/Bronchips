@@ -2,8 +2,10 @@
 
 import { Billboard } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import gsap from "gsap";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
+  type Group,
   BoxGeometry,
   type BufferGeometry,
   Color,
@@ -26,18 +28,32 @@ import { layout } from "@/config/world.config";
 import { mulberry32, noise3 } from "@/lib/three/noise";
 import { islandHeight } from "@/lib/three/terrain";
 import { woodTextures } from "@/lib/three/textures";
+import { useInteractive } from "@/hooks/useInteractive";
+import { useNavigation } from "@/state/navigation";
+import { goTo } from "../director";
 import { createGlowMaterial } from "../materials/glow";
+import { CottageInterior } from "./CottageInterior";
+import { COTTAGE } from "./cottageDims";
 import { shared } from "../materials/shared";
 
 // Cottage dimensions (local space: origin = floor centre, front door faces +Z).
-export const COTTAGE = {
-  W: 2.4, // width (x)
-  D: 2.6, // depth (z)
-  H: 1.55, // wall height
-  rise: 1.15, // roof rise above walls
-  T: 0.1, // wall thickness
-  door: { w: 0.62, h: 1.12 },
+/** Lets the director swing the door without React state. */
+export const cottageDoor = {
+  group: null as Group | null,
+  swing(open: boolean, duration = 1.3) {
+    if (!this.group) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      gsap.to(this.group!.rotation, {
+        y: open ? 1.45 : 0,
+        duration,
+        ease: open ? "power2.inOut" : "power2.inOut",
+        onComplete: resolve,
+      });
+    });
+  },
 };
+
+export { COTTAGE };
 
 const { W, D, H, rise, T } = COTTAGE;
 
@@ -153,7 +169,7 @@ function stoneRing(seed: number, material: MeshStandardMaterial) {
   const perim = (len: number, fixed: number, axis: "x" | "z", sign: number) => {
     let t = -len / 2;
     while (t < len / 2) {
-      const sz = 0.14 + rand() * 0.08;
+      const sz = 0.12 + rand() * 0.06;
       const pos = axis === "x" ? new Vector3(t + sz, 0.07, fixed * sign) : new Vector3(fixed * sign, 0.07, t + sz);
       // Leave a gap at the door.
       if (!(axis === "x" && sign > 0 && Math.abs(pos.x) < COTTAGE.door.w / 2 + 0.1)) {
@@ -162,10 +178,11 @@ function stoneRing(seed: number, material: MeshStandardMaterial) {
       t += sz * 1.7;
     }
   };
-  perim(W + 0.1, D / 2 + 0.02, "x", 1);
-  perim(W + 0.1, D / 2 + 0.02, "x", -1);
-  perim(D - 0.1, W / 2 + 0.02, "z", 1);
-  perim(D - 0.1, W / 2 + 0.02, "z", -1);
+  // Keep the ring outside the inner wall faces so no stone pokes through the floor.
+  perim(W + 0.3, D / 2 + 0.14, "x", 1);
+  perim(W + 0.3, D / 2 + 0.14, "x", -1);
+  perim(D + 0.1, W / 2 + 0.14, "z", 1);
+  perim(D + 0.1, W / 2 + 0.14, "z", -1);
   const mesh = new InstancedMesh(base, material, placements.length);
   const m = new Matrix4();
   const q = new Quaternion();
@@ -272,7 +289,15 @@ export function Cottage({ shadows }: { shadows: boolean }) {
       chimney: new MeshStandardMaterial({ color: "#8E8379", roughness: 0.95, flatShading: true }),
       door: new MeshStandardMaterial({ map: door.map, bumpMap: door.bumpMap, bumpScale: 1.2, roughness: 0.75 }),
       brass: new MeshStandardMaterial({ color: "#C9A25A", roughness: 0.35, metalness: 0.8 }),
-      glass: new MeshStandardMaterial({ color: "#3A2A20", emissive: new Color("#FFB062"), emissiveIntensity: 0.6, roughness: 0.25 }),
+      glass: new MeshStandardMaterial({
+        color: "#D9E4EC",
+        emissive: new Color("#FFB062"),
+        emissiveIntensity: 0.2,
+        roughness: 0.1,
+        transparent: true,
+        opacity: 0.28,
+        depthWrite: false,
+      }),
       lantern: new MeshStandardMaterial({ color: "#FFE2A8", emissive: new Color("#FFC36E"), emissiveIntensity: 1.5 }),
       textures: [wall.map, wall.bumpMap, door.map, door.bumpMap],
     };
@@ -336,17 +361,26 @@ export function Cottage({ shadows }: { shadows: boolean }) {
   );
 
   const glowMat = useMemo(() => createGlowMaterial("#FFC170", 1), []);
+  // The door is the way in: tap it from the garden.
+  const onDoor = useCallback(() => goTo("cottage"), []);
+  const { hovered: doorHover, bind: doorBind } = useInteractive(onDoor);
+  const doorGlow = useMemo(() => createGlowMaterial("#FFD9A0", 0), []);
   const glow = useRef<Mesh>(null);
 
   useFrame(() => {
     const g = shared.uWindowGlow.value;
     const t = shared.uTime.value;
     const flicker = 0.92 + 0.08 * Math.sin(t * 7.3) * Math.sin(t * 3.1 + 1.7);
-    mats.glass.emissiveIntensity = 0.35 + g * 1.6;
+    mats.glass.emissiveIntensity = 0.05 + g * 0.5;
     mats.lantern.emissiveIntensity = (0.6 + g * 2.2) * flicker;
     glowMat.uniforms.uOpacity.value = (0.15 + g * 0.85) * flicker;
     if (lanternLight.current) lanternLight.current.intensity = g * 2.2 * flicker;
     if (windowLight.current) windowLight.current.intensity = g * 1.4;
+    // Gentle invitation at the door handle; brighter on hover.
+    const pulse = 0.5 + 0.5 * Math.sin(t * 1.8);
+    const outside = useNavigation.getState().phase === "explore";
+    doorGlow.uniforms.uOpacity.value = outside ? 0.25 + pulse * 0.3 + (doorHover ? 0.45 : 0) : 0;
+    mats.door.emissive.setRGB(0.25, 0.18, 0.1).multiplyScalar(doorHover && outside ? 0.6 : 0);
   });
 
   const ridgeY = H + rise;
@@ -429,9 +463,14 @@ export function Cottage({ shadows }: { shadows: boolean }) {
         </mesh>
       </group>
 
-      {/* Door (pivot on the left edge so it can swing open later) */}
-      <group position={[-COTTAGE.door.w / 2 + 0.01, 0, D / 2 - T * 0.55]}>
-        <mesh geometry={geo.door} material={mats.door} castShadow={shadows} />
+      {/* Door (pivot on the left edge, swings inwards) */}
+      <group
+        ref={(g) => {
+          cottageDoor.group = g;
+        }}
+        position={[-COTTAGE.door.w / 2 + 0.01, 0, D / 2 - T * 0.55]}
+      >
+        <mesh geometry={geo.door} material={mats.door} castShadow={shadows} {...doorBind} />
         <mesh position={[COTTAGE.door.w - 0.12, 0.55, 0.07]} material={mats.brass}>
           <sphereGeometry args={[0.032, 12, 8]} />
         </mesh>
@@ -441,6 +480,12 @@ export function Cottage({ shadows }: { shadows: boolean }) {
           </mesh>
         ))}
       </group>
+      <Billboard position={[COTTAGE.door.w / 2 - 0.1, 0.58, D / 2 + 0.12]}>
+        <mesh material={doorGlow} renderOrder={6}>
+          <planeGeometry args={[0.55, 0.55]} />
+        </mesh>
+      </Billboard>
+      <CottageInterior shadows={shadows} />
       {/* Door frame */}
       <mesh position={[0, COTTAGE.door.h - COTTAGE.door.w / 2, D / 2 + 0.02]} material={mats.trim}>
         <torusGeometry args={[COTTAGE.door.w / 2 + 0.02, 0.035, 6, 18, Math.PI]} />

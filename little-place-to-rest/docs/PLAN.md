@@ -190,7 +190,7 @@ sangat halus: amplitudo partikel ±15%, glow bunga. Tidak ada kedip.
 | M0 | Rencana | Dokumen ini | ✅ |
 | M1 | **Vertical slice** | Setup proyek, sky, lighting, fog, pulau, rumput, pohon, bunga, awan, partikel, rumah (exterior), kolam dasar, camera rig, Arrival cinematic, explore orbit, interaksi bunga, UI dasar, tier kualitas dasar, `?debug` | ✅ |
 | M2 | Garden lengkap + Pond | Kupu-kupu, interaksi awan, navigasi antar-lokasi, kolam + shader air, latihan napas | ✅ |
-| M3 | Cottage + Letter | Pintu, interior, amplop 3D, surat | |
+| M3 | Cottage + Letter | Pintu, interior, amplop 3D, surat | ✅ |
 | M4 | Surprises + Stay longer | 5 kejutan, lookout, transisi waktu | |
 | M5 | Audio | Player lengkap, persistensi, reaksi musik | |
 | M6 | Optimasi & aksesibilitas | Adaptive quality, reduced motion, fallback WebGL, uji browser | |
@@ -226,3 +226,11 @@ angka FPS tidak. Gunakan `?debug` di HP asli untuk FPS nyata.
 - Kanopi latar depan menutupi pandangan saat orbit → dither-fade (Bayer 4×4) untuk dedaunan dekat kamera; versi pertama
   menghasilkan scanline karena rumus Bayer salah, sudah diperbaiki.
 - Kupu-kupu: tap → terbang ke bunga langka tersembunyi di balik rumah, kamera melirik, bunga langka menyala.
+
+### M3 — cottage & letter (4 putaran QA)
+- Aplikasi tidak memuat: circular import (`Cottage` ↔ `CottageInterior` membaca `COTTAGE` sebelum inisialisasi) →
+  dimensi dipindah ke `cottageDims.ts`.
+- Batu fondasi menembus lantai interior → ring batu digeser keluar dari sisi dalam dinding.
+- Kursi berlengan dari kotak mentah → rounded box (kain empuk); karpet bermotif "papan sasaran" → anyaman halus.
+- Shot teras terlalu dekat (dinding papan memenuhi layar) → kamera dimundurkan.
+- Catatan QA: di sandbox 1–2 fps kamera ter-damp tertinggal jauh dari target; urutan & state diverifikasi lewat eval.
