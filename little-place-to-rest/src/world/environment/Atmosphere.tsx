@@ -77,7 +77,7 @@ export function Atmosphere({ shadows, shadowMapSize }: { shadows: boolean; shado
     if (hemi.current) {
       hemi.current.color.copy(live.hemiSky);
       hemi.current.groundColor.copy(live.hemiGround);
-      hemi.current.intensity = live.hemiIntensity;
+      hemi.current.intensity = live.hemiIntensity * (1 + shared.uAudioLow.value * 0.06);
     }
     const fog = scene.fog as FogExp2 | null;
     if (fog) {

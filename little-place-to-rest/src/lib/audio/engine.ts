@@ -118,12 +118,30 @@ export function syncVolume() {
   applyVolume(fadeValue * targetVolume());
 }
 
-/** 0..1 loudness from low/mid frequencies (0 if analyser unavailable or paused). */
-export function sampleLevel() {
-  if (!analyser || !data || !useAudio.getState().playing) return 0;
+export interface Bands {
+  low: number;
+  mid: number;
+  high: number;
+}
+const bands: Bands = { low: 0, mid: 0, high: 0 };
+
+/**
+ * Three gentle bands (0..1) from the analyser. With fftSize 256 at 44.1 kHz each bin is ~172 Hz:
+ * low ≈ 0–520 Hz, mid ≈ 520 Hz–3.4 kHz, high ≈ 3.4–11 kHz. Zero when paused.
+ */
+export function sampleBands(): Bands {
+  if (!analyser || !data || !useAudio.getState().playing) {
+    bands.low = bands.mid = bands.high = 0;
+    return bands;
+  }
   analyser.getByteFrequencyData(data);
-  let sum = 0;
-  const n = Math.min(32, data.length);
-  for (let i = 2; i < n; i++) sum += data[i];
-  return (sum / ((n - 2) * 255)) * fadeValue;
+  const avg = (a: number, b: number) => {
+    let s = 0;
+    for (let i = a; i < b; i++) s += data![i];
+    return s / ((b - a) * 255);
+  };
+  bands.low = avg(0, 3) * fadeValue;
+  bands.mid = avg(3, 20) * fadeValue;
+  bands.high = avg(20, 64) * fadeValue;
+  return bands;
 }

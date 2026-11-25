@@ -12,6 +12,10 @@ export interface QualitySettings {
   postfx: "none" | "light" | "full";
   /** Icosphere subdivision for tree canopies. */
   foliageDetail: number;
+  /** Multiplier on the number of leaf cards per crown. */
+  leafDensity: number;
+  /** Petals / leaves drifting down. */
+  petals: number;
   msaa: number;
 }
 
@@ -27,6 +31,8 @@ export const qualitySettings: Record<Quality, QualitySettings> = {
     postfx: "none",
     msaa: 0,
     foliageDetail: 3,
+    leafDensity: 0.6,
+    petals: 50,
   },
   medium: {
     dpr: [1, 1.5],
@@ -39,6 +45,8 @@ export const qualitySettings: Record<Quality, QualitySettings> = {
     postfx: "light",
     msaa: 0,
     foliageDetail: 3,
+    leafDensity: 0.85,
+    petals: 90,
   },
   high: {
     dpr: [1, 2],
@@ -51,6 +59,8 @@ export const qualitySettings: Record<Quality, QualitySettings> = {
     postfx: "full",
     msaa: 4,
     foliageDetail: 4,
+    leafDensity: 1,
+    petals: 140,
   },
 };
 

@@ -323,6 +323,7 @@ export function Lookout({ shadows, grass }: { shadows: boolean; grass: number })
         translucency: 0.75,
         translucencyHeight: 0.4,
         upNormal: 0.72,
+        touch: 3.4,
       }),
     [],
   );

@@ -12,6 +12,8 @@ import { type Quality, useWorld } from "@/state/world";
 import { snapCamera } from "@/world/camera/CameraRig";
 import { cottageToWorld } from "@/world/locations";
 import { butterflyPositions } from "@/world/objects/Butterflies";
+import { pointerField, touchGround } from "@/world/environment/PointerField";
+import { shared } from "@/world/materials/shared";
 import { enterOrbit, flyTo, initialExploreShot, rig, setShot } from "@/world/camera/rig";
 import { enterWorld } from "@/world/director";
 
@@ -29,6 +31,18 @@ export function DebugBridge() {
       screenOf: (x: number, y: number, z: number) => {
         const v = new Vector3(x, y, z).project(camera);
         return [((v.x + 1) / 2) * window.innerWidth, ((1 - v.y) / 2) * window.innerHeight];
+      },
+      audio: () => ({
+        mid: +shared.uAudio.value.toFixed(3),
+        low: +shared.uAudioLow.value.toFixed(3),
+        high: +shared.uAudioHigh.value.toFixed(3),
+        pulse: +shared.uAudioPulse.value.toFixed(3),
+        petals: +shared.uPetalAmount.value.toFixed(3),
+      }),
+      /** Hold the "finger" on the ground at (x, z) — for stills of the meadow parting. */
+      pointerAt: (x: number, z: number) => {
+        touchGround(new Vector3(x, islandHeight(x, z), z));
+        pointerField.lastMove = 1e12;
       },
       /** World point along the camera ray through NDC (nx, ny) at a given distance. */
       skyPoint: (nx: number, ny: number, dist: number) => {

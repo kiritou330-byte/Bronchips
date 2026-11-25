@@ -8,9 +8,11 @@ import { layout } from "@/config/world.config";
 import type { Quality } from "@/state/world";
 import { Atmosphere } from "./environment/Atmosphere";
 import { AudioReactive } from "./environment/AudioReactive";
+import { PointerField } from "./environment/PointerField";
 import { Motes } from "./environment/Motes";
 import { Sky } from "./environment/Sky";
 import { CloudSystem } from "./environment/CloudSystem";
+import { FallingPetals } from "./environment/FallingPetals";
 import { Cottage } from "./objects/Cottage";
 import { Flowers } from "./objects/Flowers";
 import { Grass } from "./objects/Grass";
@@ -45,6 +47,7 @@ export function World({ quality, settings }: { quality: Quality; settings: Quali
     <>
       <Atmosphere shadows={settings.shadows} shadowMapSize={settings.shadowMapSize} />
       <AudioReactive />
+      <PointerField />
       <Sky />
       <CloudSystem quality={quality} />
       <Island shadows={settings.shadows} />
@@ -53,7 +56,7 @@ export function World({ quality, settings }: { quality: Quality; settings: Quali
       <Pond shadows={settings.shadows} />
       <PondDock shadows={settings.shadows} />
       <BreathingLight />
-      <Trees shadows={settings.shadows} detail={settings.foliageDetail} />
+      <Trees shadows={settings.shadows} detail={settings.foliageDetail} leafDensity={settings.leafDensity} />
       <Cottage shadows={settings.shadows} />
       {layout.interactiveFlowers.map((f, i) => (
         <InteractiveFlower
@@ -79,6 +82,7 @@ export function World({ quality, settings }: { quality: Quality; settings: Quali
       <Butterflies />
       <Surprises />
       <InteractiveCloud />
+      <FallingPetals count={settings.petals} />
       <Motes kind="dust" count={settings.dust} />
       <Motes kind="firefly" count={settings.fireflies} />
     </>

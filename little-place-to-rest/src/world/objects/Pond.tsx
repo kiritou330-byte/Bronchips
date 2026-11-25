@@ -210,6 +210,7 @@ export function Pond({ shadows }: { shadows: boolean }) {
         translucency: 0.5,
         translucencyHeight: 0.9,
         upNormal: 0.5,
+        touch: 2.2,
       }),
     [],
   );

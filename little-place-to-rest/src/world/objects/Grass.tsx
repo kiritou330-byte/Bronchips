@@ -76,6 +76,7 @@ export function Grass({ count, shadows }: { count: number; shadows: boolean }) {
       translucencyHeight: 0.4,
       upNormal: 0.72,
       audio: 0.25,
+      touch: 3.4,
     });
   }, []);
 

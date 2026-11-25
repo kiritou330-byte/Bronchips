@@ -1,11 +1,24 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { BufferAttribute, BufferGeometry, Color, ConeGeometry, MeshStandardMaterial, Vector3 } from "three";
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  ConeGeometry,
+  InstancedBufferAttribute,
+  InstancedMesh,
+  Matrix4,
+  MeshStandardMaterial,
+  PlaneGeometry,
+  Quaternion,
+  Vector3,
+} from "three";
 import { layout } from "@/config/world.config";
 import { foliageCluster, mergeGeometries, mergeVertices, taperedTube, type FoliagePalette } from "@/lib/three/geometry";
 import { mulberry32, noise3 } from "@/lib/three/noise";
 import { islandHeight } from "@/lib/three/terrain";
+import { createLeafMaterial, leafClusterTexture } from "../materials/leaves";
 import { applyWind } from "../materials/wind";
 
 const oakPalette: FoliagePalette = {
@@ -27,7 +40,7 @@ const bushPalette: FoliagePalette = {
   warm: new Color("#B9B862"),
 };
 
-function buildOak(seed: number, detail: number) {
+function buildOak(seed: number, detail: number, density: number) {
   const rand = mulberry32(seed);
   const lean = new Vector3((rand() - 0.5) * 0.5, 0, (rand() - 0.5) * 0.5);
   const H = 2.6 + rand() * 0.5;
@@ -57,7 +70,60 @@ function buildOak(seed: number, detail: number) {
   const foliage = foliageCluster(blobs, oakPalette, { seed, detail, lumps: 0.3, squashBottom: 0.8 });
   const trunk = mergeGeometries(wood, false)!;
   wood.forEach((w) => w.dispose());
-  return { trunk, foliage };
+  return { trunk, foliage, cards: leafCards(blobs, seed, density) };
+}
+
+/**
+ * Leaf cards scattered over the crown's lumpy volume: an outer layer of lit cards and an
+ * inner, darker layer for depth. Normals point away from the crown centre ("fluffy" shading).
+ */
+function leafCards(blobs: { center: Vector3; radius: number }[], seed: number, density: number) {
+  const rand = mulberry32(seed * 31 + 7);
+  const crown = new Vector3();
+  blobs.forEach((b) => crown.add(b.center));
+  crown.divideScalar(blobs.length);
+  let minY = Infinity,
+    maxY = -Infinity;
+  blobs.forEach((b) => {
+    minY = Math.min(minY, b.center.y - b.radius);
+    maxY = Math.max(maxY, b.center.y + b.radius);
+  });
+  const mats: number[] = [];
+  const leaf: number[] = [];
+  const cols: number[] = [];
+  const m = new Matrix4();
+  const c = new Color();
+  const p = new Vector3();
+  const n = new Vector3();
+  const one = new Quaternion();
+  for (const b of blobs) {
+    const count = Math.round(b.radius * b.radius * 46 * density);
+    for (let i = 0; i < count; i++) {
+      const inner = rand() < 0.28;
+      // Uniform direction on the sphere, biased a little upward (more leaves on top).
+      const u = rand() * 2 - 1 + 0.15;
+      const a = rand() * Math.PI * 2;
+      const r = Math.sqrt(Math.max(0, 1 - Math.min(1, u) ** 2));
+      const dir = n.set(Math.cos(a) * r, Math.min(1, u), Math.sin(a) * r).normalize();
+      const dist = b.radius * (inner ? 0.45 + rand() * 0.25 : 0.78 + rand() * 0.3);
+      p.copy(b.center).addScaledVector(dir, dist);
+      if (p.y < b.center.y) p.y = b.center.y + (p.y - b.center.y) * 0.8;
+      const size = (inner ? 0.75 : 0.58) * (0.8 + rand() * 0.45) * Math.min(1.25, 0.65 + b.radius * 0.35);
+      m.compose(p, one, new Vector3(size, size, size));
+      mats.push(...m.elements);
+      const out = p.clone().sub(crown).normalize().lerp(dir, 0.35).normalize();
+      leaf.push(out.x, out.y, out.z, rand());
+      const h = (p.y - minY) / Math.max(0.001, maxY - minY);
+      const patch = noise3(p.x * 1.3 + seed, p.y * 1.3, p.z * 1.3) * 0.5 + 0.5;
+      c.copy(oakPalette.deep).lerp(oakPalette.mid, Math.min(1, h * 1.25));
+      c.lerp(oakPalette.light, Math.max(0, h - 0.4) * 1.4 * (0.55 + patch * 0.6));
+      c.lerp(oakPalette.warm, Math.max(0, patch - 0.66) * 1.4 * h);
+      if (inner) c.multiplyScalar(0.55);
+      c.multiplyScalar(0.9 + rand() * 0.2);
+      cols.push(c.r, c.g, c.b);
+    }
+  }
+  return { matrices: new Float32Array(mats), leaf: new Float32Array(leaf), colors: new Float32Array(cols) };
 }
 
 /** Stacked, jagged cone tiers with drooping tips. */
@@ -142,15 +208,15 @@ function buildBush(seed: number) {
   return foliageCluster(blobs, bushPalette, { seed, detail: 2, lumps: 0.3, squashBottom: 0.6 });
 }
 
-export function Trees({ shadows, detail = 4 }: { shadows: boolean; detail?: number }) {
+export function Trees({ shadows, detail = 4, leafDensity = 1 }: { shadows: boolean; detail?: number; leafDensity?: number }) {
   const built = useMemo(
     () =>
       layout.trees.map((t) => ({
         ...t,
         y: islandHeight(t.position[0], t.position[1]),
-        geo: t.kind === "oak" ? buildOak(t.seed, detail) : buildPine(t.seed),
+        geo: t.kind === "oak" ? buildOak(t.seed, detail, leafDensity) : { ...buildPine(t.seed), cards: null },
       })),
-    [detail],
+    [detail, leafDensity],
   );
   const bushes = useMemo(
     () =>
@@ -159,7 +225,7 @@ export function Trees({ shadows, detail = 4 }: { shadows: boolean; detail?: numb
   );
 
   const mats = useMemo(() => {
-    const treeWind = { bendPow: 2, bendAmp: 0.0042, flutter: 0.6, translucency: 0.32, nearFade: [3.5, 7.5] as [number, number] };
+    const treeWind = { bendPow: 2, bendAmp: 0.0042, flutter: 0.6, translucency: 0.32, nearFade: [2.0, 4.2] as [number, number] };
     const foliage = applyWind(new MeshStandardMaterial({ vertexColors: true, roughness: 0.82 }), treeWind);
     const bark = applyWind(new MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }), treeWind);
     const bush = applyWind(new MeshStandardMaterial({ vertexColors: true, roughness: 0.85 }), {
@@ -170,8 +236,34 @@ export function Trees({ shadows, detail = 4 }: { shadows: boolean; detail?: numb
       audio: 0.4,
       nearFade: [2.0, 4.5],
     });
-    return { foliage, bark, bush };
+    // Oak crowns are drawn as leaf cards; the old lumpy crown stays as an invisible shadow caster.
+    const leafTex = leafClusterTexture();
+    const leaves = createLeafMaterial(leafTex, { shrink: [4.5, 9.0], bendAmp: 0.0042, translucency: 0.55 });
+    const shadowProxy = new MeshStandardMaterial({ colorWrite: false, depthWrite: false });
+    return { foliage, bark, bush, leaves, leafTex, shadowProxy };
   }, []);
+
+  const cardMeshes = useMemo(
+    () =>
+      built.map((t) => {
+        if (!t.geo.cards) return null;
+        const { matrices, leaf, colors } = t.geo.cards;
+        const count = colors.length / 3;
+        const geo = new PlaneGeometry(1, 1);
+        geo.setAttribute("aLeaf", new InstancedBufferAttribute(leaf, 4));
+        const im = new InstancedMesh(geo, mats.leaves, count);
+        im.instanceMatrix.array.set(matrices);
+        im.instanceMatrix.needsUpdate = true;
+        im.instanceColor = new InstancedBufferAttribute(colors, 3);
+        im.frustumCulled = false;
+        return im;
+      }),
+    [built, mats.leaves],
+  );
+  useEffect(() => {
+    cardMeshes.forEach((m) => m && (m.receiveShadow = shadows));
+  }, [cardMeshes, shadows]);
+  useEffect(() => () => cardMeshes.forEach((m) => m && (m.geometry.dispose(), m.dispose())), [cardMeshes]);
 
   useEffect(
     () => () => {
@@ -187,7 +279,7 @@ export function Trees({ shadows, detail = 4 }: { shadows: boolean; detail?: numb
 
   return (
     <group>
-      {built.map((t) => (
+      {built.map((t, i) => (
         <group
           key={t.seed}
           position={[t.position[0], t.y, t.position[1]]}
@@ -195,7 +287,14 @@ export function Trees({ shadows, detail = 4 }: { shadows: boolean; detail?: numb
           rotation={[0, t.seed * 0.7, 0]}
         >
           <mesh geometry={t.geo.trunk} material={mats.bark} castShadow={shadows} receiveShadow={shadows} />
-          <mesh geometry={t.geo.foliage} material={mats.foliage} castShadow={shadows} receiveShadow={shadows} />
+          {cardMeshes[i] ? (
+            <>
+              <primitive object={cardMeshes[i]!} />
+              <mesh geometry={t.geo.foliage} material={mats.shadowProxy} castShadow={shadows} />
+            </>
+          ) : (
+            <mesh geometry={t.geo.foliage} material={mats.foliage} castShadow={shadows} receiveShadow={shadows} />
+          )}
         </group>
       ))}
       {bushes.map((b) => (

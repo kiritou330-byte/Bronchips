@@ -13,6 +13,7 @@ import {
 import { layout } from "@/config/world.config";
 import { clamp, fbm3, lerp, mulberry32, noise2, noise3, smoothstep } from "@/lib/three/noise";
 import { groundColor, islandHeight, islandRadiusAt, srgbToLinear } from "@/lib/three/terrain";
+import { touchGround } from "../environment/PointerField";
 
 const RINGS = 56;
 const SEGMENTS = 144;
@@ -227,7 +228,7 @@ export function Island({ shadows }: { shadows: boolean }) {
 
   return (
     <group>
-      <mesh geometry={top} material={topMat} receiveShadow={shadows} />
+      <mesh geometry={top} material={topMat} receiveShadow={shadows} onPointerMove={(e) => touchGround(e.point)} />
       <mesh geometry={under} material={rockMat} castShadow={false} receiveShadow={false} />
       {shardDefs.map((d, i) => (
         <group

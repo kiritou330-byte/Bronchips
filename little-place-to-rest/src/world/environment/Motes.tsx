@@ -61,6 +61,8 @@ export function Motes({ kind, count }: { kind: Kind; count: number }) {
           uNight: shared.uNight,
           uFireflies: shared.uFireflies,
           uAudio: shared.uAudio,
+          uAudioHigh: shared.uAudioHigh,
+          uAudioPulse: shared.uAudioPulse,
           uPixelRatio: { value: 1 },
           uColor: { value: new Color(kind === "dust" ? "#FFE3B0" : "#E9F7A0") },
           uSize: { value: kind === "dust" ? 0.06 : 0.13 },
@@ -97,7 +99,7 @@ export function Motes({ kind, count }: { kind: Kind; count: number }) {
           }
         `,
         fragmentShader: /* glsl */ `
-          uniform float uTime, uNight, uFireflies, uKind;
+          uniform float uTime, uNight, uFireflies, uKind, uAudioHigh, uAudioPulse;
           uniform vec3 uColor, uSunColor;
           varying float vAlpha;
           varying float vSeed;
@@ -117,7 +119,8 @@ export function Motes({ kind, count }: { kind: Kind; count: number }) {
               float b = sin(uTime * (0.9 + vSeed * 0.8) + vSeed * 40.0);
               float blink = smoothstep(-0.6, 0.6, b);
               col = uColor;
-              a = (glow * 1.1 + pow(core, 8.0)) * blink * uFireflies;
+              float music = 1.0 + uAudioHigh * 0.35 + uAudioPulse * 0.45 * step(0.6, fract(vSeed * 7.0));
+              a = (glow * 1.1 + pow(core, 8.0)) * blink * uFireflies * music;
             }
             gl_FragColor = vec4(col * a * vAlpha, 1.0);
             #include <colorspace_fragment>

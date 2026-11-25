@@ -62,7 +62,7 @@ const palette = ["#F6EEDC", "#C2B1DE", "#F2D27C", "#F2B59C", "#FBF7EF", "#9C88C4
 export function Flowers({ count, shadows }: { count: number; shadows: boolean }) {
   const head = useMemo(headGeometry, []);
   const stem = useMemo(stemGeometry, []);
-  const wind = { bendPow: 1.5, bendAmp: 0.32, flutter: 0.18, translucency: 0.35, audio: 0.5 };
+  const wind = { bendPow: 1.5, bendAmp: 0.32, flutter: 0.18, translucency: 0.35, audio: 0.5, touch: 2.6 };
   const headMat = useMemo(
     () => applyWind(new MeshStandardMaterial({ vertexColors: true, roughness: 0.7, side: DoubleSide }), wind),
     // eslint-disable-next-line react-hooks/exhaustive-deps

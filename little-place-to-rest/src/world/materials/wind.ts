@@ -20,6 +20,8 @@ export interface WindOptions {
    * canopies never wall off the view while orbiting.
    */
   nearFade?: [number, number];
+  /** How far the plant parts away from the visitor's finger/cursor (0 = ignores it). */
+  touch?: number;
 }
 
 /** GLSL shared wind field. Smooth in space so neighbouring blades move together like real gusts. */
@@ -29,6 +31,8 @@ uniform float uWind;
 uniform vec3 uSunDir;
 uniform vec3 uSunColor;
 uniform float uAudio;
+uniform vec3 uPointer;
+uniform float uPointerStrength;
 
 vec3 windField(vec3 origin, vec3 p, float flutter) {
   vec2 dir = normalize(vec2(1.0, 0.42));
@@ -52,7 +56,7 @@ vec3 windField(vec3 origin, vec3 p, float flutter) {
  */
 export function applyWind<T extends Material>(material: T, o: WindOptions): T {
   const fade = o.nearFade;
-  const key = `wind-${o.bendPow}-${o.bendAmp}-${o.flutter ?? 0}-${o.translucency ?? 0}-${o.upNormal ?? 0}-${fade?.join(",") ?? ""}`;
+  const key = `wind-${o.bendPow}-${o.bendAmp}-${o.flutter ?? 0}-${o.translucency ?? 0}-${o.upNormal ?? 0}-${fade?.join(",") ?? ""}-${o.touch ?? 0}`;
   material.customProgramCacheKey = () => key;
   material.onBeforeCompile = (shader: WebGLProgramParametersWithUniforms) => {
     shader.uniforms.uTime = shared.uTime;
@@ -61,6 +65,8 @@ export function applyWind<T extends Material>(material: T, o: WindOptions): T {
     shader.uniforms.uSunColor = shared.uSunColor;
     shader.uniforms.uAudio = shared.uAudio;
     shader.uniforms.uNearFade = shared.uNearFade;
+    shader.uniforms.uPointer = shared.uPointer;
+    shader.uniforms.uPointerStrength = shared.uPointerStrength;
 
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", `#include <common>\n${windGLSL}\nvarying float vTransl;\nvarying float vCamDist;`)
@@ -82,6 +88,11 @@ export function applyWind<T extends Material>(material: T, o: WindOptions): T {
         float hgt = max(wPos.y - wOrigin.y, 0.0);
         float bend = pow(hgt, ${o.bendPow.toFixed(3)}) * ${o.bendAmp.toFixed(4)} * (1.0 + uAudio * ${(o.audio ?? 0).toFixed(3)});
         vec3 off = windField(wOrigin, wPos.xyz, ${(o.flutter ?? 0).toFixed(3)}) * bend;
+        // Part gently around the visitor's finger / cursor.
+        vec2 pd = wOrigin.xz - uPointer.xz;
+        float pr = length(pd);
+        float pk = uPointerStrength * (1.0 - smoothstep(0.12, 0.9, pr)) * step(abs(wOrigin.y - uPointer.y), 1.5);
+        off.xz += pd / max(pr, 0.05) * pk * bend * ${(o.touch ?? 0).toFixed(3)};
         // Keep length roughly constant: bending pushes the tip down a little.
         off.y -= dot(off.xz, off.xz) * 0.6;
         wPos.xyz += off;

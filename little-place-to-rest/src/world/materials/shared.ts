@@ -22,10 +22,20 @@ export const shared = {
   uSunDisc: { value: atmospheres[defaultTimeOfDay].sunDiscSize },
   uSunGlow: { value: atmospheres[defaultTimeOfDay].sunGlow },
   uCloudShade: { value: new Color(atmospheres[defaultTimeOfDay].cloudShade) },
-  /** Smoothed music loudness 0..1 (0 when music is off or reactive mode disabled). */
+  /** Smoothed music loudness 0..1 (0 when music is off or reactive mode disabled). Mid-weighted. */
   uAudio: { value: 0 },
+  /** Separate gentle music channels (all 0 when music is off or reactive mode disabled). */
+  uAudioLow: { value: 0 },
+  uAudioHigh: { value: 0 },
+  /** Soft envelope that rises on a detected beat and fades within ~0.3 s. */
+  uAudioPulse: { value: 0 },
+  /** How much of the falling-petal population is visible (grows through the song). */
+  uPetalAmount: { value: 0.7 },
   /** 0..1 — how strongly near-camera foliage is faded (on while orbiting, off for composed shots). */
   uNearFade: { value: 0 },
+  /** Where the visitor's finger/cursor touches the ground (world space), and how strongly. */
+  uPointer: { value: new Vector3(0, -100, 0) },
+  uPointerStrength: { value: 0 },
 };
 
 /** Live (interpolated) atmosphere values for things that are not shader uniforms. */
