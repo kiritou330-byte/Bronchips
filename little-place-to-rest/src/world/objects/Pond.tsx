@@ -1,7 +1,8 @@
 "use client";
 
-import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
+import { type ThreeEvent, useFrame } from "@react-three/fiber";
+import { useCallback, useEffect, useMemo } from "react";
+import { useInteractive } from "@/hooks/useInteractive";
 import {
   BufferAttribute,
   BufferGeometry,
@@ -189,7 +190,7 @@ function reeds(material: MeshStandardMaterial) {
     const x = PX + Math.cos(a) * r;
     const z = PZ + Math.sin(a) * r;
     q.setFromAxisAngle(new Vector3(0, 1, 0), rand() * Math.PI * 2);
-    const h = 0.5 + rand() * 0.55;
+    const h = 0.35 + rand() * 0.4;
     m.compose(new Vector3(x, islandHeight(x, z) - 0.05, z), q, new Vector3(1, h, 1));
     mesh.setMatrixAt(i, m);
   }
@@ -223,6 +224,10 @@ export function Pond({ shadows }: { shadows: boolean }) {
     });
   }, []);
 
+  // Touching the water sends out a ripple — in the garden and while sitting by the pond.
+  const onTap = useCallback((e: ThreeEvent<MouseEvent>) => pondRipples.add(e.point.x, e.point.z), []);
+  const { bind } = useInteractive(onTap, true, ["explore", "pond"]);
+
   useEffect(() => {
     stones.castShadow = shadows;
     stones.receiveShadow = shadows;
@@ -247,7 +252,14 @@ export function Pond({ shadows }: { shadows: boolean }) {
 
   return (
     <group>
-      <mesh geometry={waterGeo} material={water} position={[PX, pondWaterLevel, PZ]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1} />
+      <mesh
+        geometry={waterGeo}
+        material={water}
+        position={[PX, pondWaterLevel, PZ]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        renderOrder={1}
+        onClick={bind.onClick}
+      />
       <primitive object={stones} />
       <primitive object={reedMesh} />
       {pads.map((p, i) => (

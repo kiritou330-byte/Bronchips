@@ -148,6 +148,7 @@ export function CameraRig() {
       const f = framing();
       orbitPosition(o.azimuth, o.polar, o.distance * f.distMul, o.center, rig.position);
       rig.lookAt.copy(o.center);
+      if (rig.glance.weight > 0.001) rig.lookAt.lerp(rig.glance.point, rig.glance.weight * 0.38);
       rig.fov = orbitCfg.fov + f.fovAdd;
     }
 

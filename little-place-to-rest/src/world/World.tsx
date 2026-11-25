@@ -15,7 +15,12 @@ import { Flowers } from "./objects/Flowers";
 import { Grass } from "./objects/Grass";
 import { InteractiveFlower } from "./objects/InteractiveFlower";
 import { Island } from "./objects/Island";
+import { BreathingLight } from "./objects/BreathingLight";
+import { Butterflies, RARE_FLOWER } from "./objects/Butterflies";
+import { InteractiveCloud } from "./objects/InteractiveCloud";
+import { Props } from "./objects/Props";
 import { Pond } from "./objects/Pond";
+import { PondDock } from "./objects/PondDock";
 import { Trees } from "./objects/Trees";
 
 export function World({ quality, settings }: { quality: Quality; settings: QualitySettings }) {
@@ -42,6 +47,8 @@ export function World({ quality, settings }: { quality: Quality; settings: Quali
       <Grass count={settings.grass} shadows={settings.shadows} />
       <Flowers count={settings.flowers} shadows={settings.shadows} />
       <Pond shadows={settings.shadows} />
+      <PondDock shadows={settings.shadows} />
+      <BreathingLight />
       <Trees shadows={settings.shadows} detail={settings.foliageDetail} />
       <Cottage shadows={settings.shadows} />
       {layout.interactiveFlowers.map((f, i) => (
@@ -54,6 +61,18 @@ export function World({ quality, settings }: { quality: Quality; settings: Quali
           messageIndex={i}
         />
       ))}
+      <InteractiveFlower
+        id="rare-flower"
+        position={RARE_FLOWER}
+        color="#A9C8F2"
+        seed={777}
+        rare
+        scale={1.2}
+        message="Not everyone notices the little things. You did."
+      />
+      <Props shadows={settings.shadows} />
+      <Butterflies />
+      <InteractiveCloud />
       <Motes kind="dust" count={settings.dust} />
       <Motes kind="firefly" count={settings.fireflies} />
     </>

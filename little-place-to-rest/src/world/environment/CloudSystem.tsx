@@ -4,6 +4,9 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import {
   CanvasTexture,
+  CustomBlending,
+  OneFactor,
+  OneMinusSrcAlphaFactor,
   Color,
   InstancedBufferAttribute,
   InstancedMesh,
@@ -28,7 +31,7 @@ interface Puff {
   opacity: number;
 }
 
-function puffTexture() {
+export function puffTexture() {
   const size = 128;
   const c = document.createElement("canvas");
   c.width = c.height = size;
@@ -119,6 +122,93 @@ export function buildCloudPuffs(quality: Quality) {
   return puffs;
 }
 
+/** Shared cloud shader: volume-like shading, silver lining, fog, premultiplied alpha. */
+export function createCloudMaterial(texture: CanvasTexture) {
+  const m = new ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: {
+      uMap: { value: texture },
+      uTime: shared.uTime,
+      uSunDir: shared.uSunDir,
+      uSunColor: shared.uSunColor,
+      uShade: shared.uCloudShade,
+      uSkyTop: shared.uSkyTop,
+      uHorizon: shared.uSkyHorizon,
+      uNight: shared.uNight,
+      uFogColor: { value: new Color() },
+      uFogDensity: { value: 0.01 },
+      uGlow: { value: 0 },
+    },
+    vertexShader: /* glsl */ `
+      attribute vec3 aCenter;
+      attribute vec4 aParams; // size, rotation, phase, opacity
+      uniform float uTime;
+      varying vec2 vUv;
+      varying vec3 vWorld;
+      varying vec3 vCenter;
+      varying float vOpacity;
+      varying float vFogDepth;
+      void main() {
+        vUv = uv;
+        vec3 center = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+        float size = aParams.x * (1.0 + 0.04 * sin(uTime * 0.25 + aParams.z));
+        float rot = aParams.y + uTime * 0.01 * (fract(aParams.z) - 0.5);
+        vec2 q = vec2(position.x * cos(rot) - position.y * sin(rot), position.x * sin(rot) + position.y * cos(rot));
+        vec3 right = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
+        vec3 up = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
+        vec3 world = center + (right * q.x + up * q.y) * size;
+        vWorld = world;
+        vCenter = aCenter;
+        vec4 mv = viewMatrix * vec4(world, 1.0);
+        vFogDepth = -mv.z;
+        // Fade puffs that get very close to the camera (flying through clouds).
+        vOpacity = aParams.w * smoothstep(size * 0.25, size * 0.9, vFogDepth);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D uMap;
+      uniform vec3 uSunDir, uSunColor, uShade, uSkyTop, uHorizon, uFogColor;
+      uniform float uNight, uFogDensity, uGlow;
+      varying vec2 vUv;
+      varying vec3 vWorld;
+      varying vec3 vCenter;
+      varying float vOpacity;
+      varying float vFogDepth;
+      void main() {
+        float a = texture2D(uMap, vUv).a * vOpacity;
+        if (a < 0.004) discard;
+        vec3 n = normalize(vWorld - vCenter + vec3(0.0, 0.0001, 0.0));
+        vec3 sd = normalize(uSunDir);
+        float lit = clamp(dot(n, sd) * 0.5 + 0.5, 0.0, 1.0);
+        float topness = clamp(n.y * 0.5 + 0.5, 0.0, 1.0);
+        // Ambient from the sky, shaded base, warm sunlit side.
+        vec3 base = mix(uShade, mix(uHorizon, vec3(1.0), 0.55), topness);
+        vec3 sunlit = mix(vec3(1.0), uSunColor, 0.55) * 1.15;
+        vec3 col = mix(base, sunlit, smoothstep(0.35, 1.0, lit) * (1.0 - uNight * 0.6));
+        // Thin edges glow when the sun is behind the cloud (silver lining).
+        vec3 vd = normalize(vWorld - cameraPosition);
+        float back = pow(max(dot(vd, sd), 0.0), 6.0);
+        col += uSunColor * back * (1.0 - a) * 1.2;
+        col = mix(col, uShade * 0.75 + uSkyTop * 0.25, uNight * 0.82);
+        // Affordance shimmer for touchable clouds: warm light on thin edges.
+        col += vec3(1.0, 0.86, 0.62) * uGlow * (1.0 - a) * 0.9;
+        // Exponential-squared fog, same as the scene.
+        float f = 1.0 - exp(-uFogDensity * uFogDensity * vFogDepth * vFogDepth);
+        col = mix(col, uFogColor, f);
+        gl_FragColor = vec4(col * a, a);
+        #include <colorspace_fragment>
+      }
+    `,
+  });
+  m.premultipliedAlpha = true;
+  m.blending = CustomBlending;
+  m.blendSrc = OneFactor;
+  m.blendDst = OneMinusSrcAlphaFactor;
+  return m;
+}
+
 const tmpObj = new Object3D();
 const camPos = new Vector3();
 
@@ -128,93 +218,7 @@ export function CloudSystem({ quality }: { quality: Quality }) {
   const order = useRef<number[]>([]);
   const frame = useRef(0);
 
-  const material = useMemo(
-    () =>
-      new ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        uniforms: {
-          uMap: { value: texture },
-          uTime: shared.uTime,
-          uSunDir: shared.uSunDir,
-          uSunColor: shared.uSunColor,
-          uShade: shared.uCloudShade,
-          uSkyTop: shared.uSkyTop,
-          uHorizon: shared.uSkyHorizon,
-          uNight: shared.uNight,
-          uFogColor: { value: new Color() },
-          uFogDensity: { value: 0.01 },
-        },
-        vertexShader: /* glsl */ `
-          attribute vec3 aCenter;
-          attribute vec4 aParams; // size, rotation, phase, opacity
-          uniform float uTime;
-          varying vec2 vUv;
-          varying vec3 vWorld;
-          varying vec3 vCenter;
-          varying float vOpacity;
-          varying float vFogDepth;
-          void main() {
-            vUv = uv;
-            vec3 center = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-            float size = aParams.x * (1.0 + 0.04 * sin(uTime * 0.25 + aParams.z));
-            float rot = aParams.y + uTime * 0.01 * (fract(aParams.z) - 0.5);
-            vec2 q = vec2(position.x * cos(rot) - position.y * sin(rot), position.x * sin(rot) + position.y * cos(rot));
-            vec3 right = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
-            vec3 up = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
-            vec3 world = center + (right * q.x + up * q.y) * size;
-            vWorld = world;
-            vCenter = aCenter;
-            vec4 mv = viewMatrix * vec4(world, 1.0);
-            vFogDepth = -mv.z;
-            // Fade puffs that get very close to the camera (flying through clouds).
-            vOpacity = aParams.w * smoothstep(size * 0.25, size * 0.9, vFogDepth);
-            gl_Position = projectionMatrix * mv;
-          }
-        `,
-        fragmentShader: /* glsl */ `
-          uniform sampler2D uMap;
-          uniform vec3 uSunDir, uSunColor, uShade, uSkyTop, uHorizon, uFogColor;
-          uniform float uNight, uFogDensity;
-          varying vec2 vUv;
-          varying vec3 vWorld;
-          varying vec3 vCenter;
-          varying float vOpacity;
-          varying float vFogDepth;
-          void main() {
-            float a = texture2D(uMap, vUv).a * vOpacity;
-            if (a < 0.004) discard;
-            vec3 n = normalize(vWorld - vCenter + vec3(0.0, 0.0001, 0.0));
-            vec3 sd = normalize(uSunDir);
-            float lit = clamp(dot(n, sd) * 0.5 + 0.5, 0.0, 1.0);
-            float topness = clamp(n.y * 0.5 + 0.5, 0.0, 1.0);
-            // Ambient from the sky, shaded base, warm sunlit side.
-            vec3 base = mix(uShade, mix(uHorizon, vec3(1.0), 0.55), topness);
-            vec3 sunlit = mix(vec3(1.0), uSunColor, 0.55) * 1.15;
-            vec3 col = mix(base, sunlit, smoothstep(0.35, 1.0, lit) * (1.0 - uNight * 0.6));
-            // Thin edges glow when the sun is behind the cloud (silver lining).
-            vec3 vd = normalize(vWorld - cameraPosition);
-            float back = pow(max(dot(vd, sd), 0.0), 6.0);
-            col += uSunColor * back * (1.0 - a) * 1.2;
-            col = mix(col, uShade * 0.9 + uSkyTop * 0.2, uNight * 0.55);
-            // Exponential-squared fog, same as the scene.
-            float f = 1.0 - exp(-uFogDensity * uFogDensity * vFogDepth * vFogDepth);
-            col = mix(col, uFogColor, f);
-            gl_FragColor = vec4(col * a, a);
-            #include <colorspace_fragment>
-          }
-        `,
-      }),
-    [texture],
-  );
-  // Premultiplied alpha blending.
-  useEffect(() => {
-    material.premultipliedAlpha = true;
-    material.blending = 5; // CustomBlending
-    material.blendSrc = 201; // OneFactor
-    material.blendDst = 205; // OneMinusSrcAlphaFactor
-    material.needsUpdate = true;
-  }, [material]);
+  const material = useMemo(() => createCloudMaterial(texture), [texture]);
 
   const mesh = useMemo(() => {
     const geo = new PlaneGeometry(1, 1);

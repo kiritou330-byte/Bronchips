@@ -159,7 +159,7 @@ export function Trees({ shadows, detail = 4 }: { shadows: boolean; detail?: numb
   );
 
   const mats = useMemo(() => {
-    const treeWind = { bendPow: 2, bendAmp: 0.0042, flutter: 0.6, translucency: 0.32 };
+    const treeWind = { bendPow: 2, bendAmp: 0.0042, flutter: 0.6, translucency: 0.32, nearFade: [3.5, 7.5] as [number, number] };
     const foliage = applyWind(new MeshStandardMaterial({ vertexColors: true, roughness: 0.82 }), treeWind);
     const bark = applyWind(new MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }), treeWind);
     const bush = applyWind(new MeshStandardMaterial({ vertexColors: true, roughness: 0.85 }), {
@@ -168,6 +168,7 @@ export function Trees({ shadows, detail = 4 }: { shadows: boolean; detail?: numb
       flutter: 0.4,
       translucency: 0.3,
       audio: 0.4,
+      nearFade: [2.0, 4.5],
     });
     return { foliage, bark, bush };
   }, []);

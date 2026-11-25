@@ -189,7 +189,7 @@ sangat halus: amplitudo partikel ±15%, glow bunga. Tidak ada kedip.
 |---|---|---|---|
 | M0 | Rencana | Dokumen ini | ✅ |
 | M1 | **Vertical slice** | Setup proyek, sky, lighting, fog, pulau, rumput, pohon, bunga, awan, partikel, rumah (exterior), kolam dasar, camera rig, Arrival cinematic, explore orbit, interaksi bunga, UI dasar, tier kualitas dasar, `?debug` | ✅ |
-| M2 | Garden lengkap + Pond | Kupu-kupu, interaksi awan, navigasi antar-lokasi, kolam + shader air, latihan napas | |
+| M2 | Garden lengkap + Pond | Kupu-kupu, interaksi awan, navigasi antar-lokasi, kolam + shader air, latihan napas | ✅ |
 | M3 | Cottage + Letter | Pintu, interior, amplop 3D, surat | |
 | M4 | Surprises + Stay longer | 5 kejutan, lookout, transisi waktu | |
 | M5 | Audio | Player lengkap, persistensi, reaksi musik | |
@@ -218,3 +218,11 @@ Masalah yang ditemukan lewat screenshot dan sudah diperbaiki:
 
 Catatan lingkungan QA: browser sandbox merender WebGL secara software (~1–4 fps). Penilaian visual valid,
 angka FPS tidak. Gunakan `?debug` di HP asli untuk FPS nyata.
+
+### M2 — garden & quiet pond (5 putaran QA)
+- Shot duduk awalnya setinggi permukaan air (rumput & alang-alang raksasa) → dinaikkan ke eye-line duduk di dermaga.
+- Teratai cahaya napas terbaca sebagai nyala api terlalu terang → diperkecil, intensitas diturunkan; malam hari paling indah.
+- Awan interaktif tersangkut di puncak pinus, lalu di luar layar → dipindah ke sisi kanan yang terlihat di view taman.
+- Kanopi latar depan menutupi pandangan saat orbit → dither-fade (Bayer 4×4) untuk dedaunan dekat kamera; versi pertama
+  menghasilkan scanline karena rumus Bayer salah, sudah diperbaiki.
+- Kupu-kupu: tap → terbang ke bunga langka tersembunyi di balik rumah, kamera melirik, bunga langka menyala.

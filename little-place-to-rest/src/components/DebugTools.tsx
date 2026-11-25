@@ -10,6 +10,7 @@ import type { TimeOfDay } from "@/config/world.config";
 import { useNavigation } from "@/state/navigation";
 import { type Quality, useWorld } from "@/state/world";
 import { snapCamera } from "@/world/camera/CameraRig";
+import { butterflyPositions } from "@/world/objects/Butterflies";
 import { enterOrbit, flyTo, initialExploreShot, rig, setShot } from "@/world/camera/rig";
 import { enterWorld } from "@/world/director";
 
@@ -23,6 +24,15 @@ export function DebugBridge() {
     gsap.ticker.lagSmoothing(0);
     const api = {
       scene,
+      /** Screen position (CSS px) of any world point. */
+      screenOf: (x: number, y: number, z: number) => {
+        const v = new Vector3(x, y, z).project(camera);
+        return [((v.x + 1) / 2) * window.innerWidth, ((1 - v.y) / 2) * window.innerHeight];
+      },
+      butterflyScreen: (i: number) => {
+        const v = butterflyPositions[i].clone().project(camera);
+        return [((v.x + 1) / 2) * window.innerWidth, ((1 - v.y) / 2) * window.innerHeight];
+      },
       /** Screen position (CSS px) of an interactive flower head. */
       flowerScreen: (i: number) => {
         const f = layout.interactiveFlowers[i];

@@ -31,6 +31,8 @@ export const rig = {
     /** Seconds since the last user input (drives idle drift). */
     idle: 0,
   },
+  /** A brief glance towards a point of interest while orbiting (0 = none). */
+  glance: { point: new Vector3(), weight: 0 },
   tween: null as gsap.core.Tween | gsap.core.Timeline | null,
   reducedMotion: false,
 };
@@ -110,6 +112,18 @@ export function flyTo(shot: Shot, o: FlyOptions = {}) {
     },
   });
   return rig.tween;
+}
+
+let glanceTween: gsap.core.Timeline | null = null;
+/** Let the camera's attention drift towards something for a moment, then come back. */
+export function glanceAt(x: number, y: number, z: number, hold = 2.4) {
+  if (rig.reducedMotion) return;
+  glanceTween?.kill();
+  rig.glance.point.set(x, y, z);
+  glanceTween = gsap
+    .timeline()
+    .to(rig.glance, { weight: 1, duration: 1.6, ease: "sine.inOut" })
+    .to(rig.glance, { weight: 0, duration: 2.6, ease: "sine.inOut" }, `+=${hold}`);
 }
 
 /** Hand control to the orbit controller, continuing from wherever the camera currently is. */

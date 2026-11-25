@@ -108,7 +108,7 @@ export function Grass({ count, shadows }: { count: number; shadows: boolean }) {
       const nearPond = smoothstep(1.2, 0.1, distToPond(pt.x, pt.z));
       let h = 0.26 + 0.14 * clump + rand() * 0.14;
       h *= 0.65 + 0.35 * smoothstep(0.2, 0.9, pd);
-      h *= 1 + nearPond * 0.6;
+      h *= 1 + nearPond * 0.15;
       h *= 0.75 + 0.25 * smoothstep(0.0, 0.1, insideFactor(pt.x, pt.z));
       q.setFromAxisAngle(up, rand() * Math.PI * 2);
       const [nx, ny, nz] = islandNormal(pt.x, pt.z);

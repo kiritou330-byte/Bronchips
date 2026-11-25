@@ -75,16 +75,25 @@ export function InteractiveFlower({
   position,
   color,
   seed,
-  messageIndex,
+  messageIndex = 0,
+  message,
+  rare = false,
+  scale = 1.55,
 }: {
   id: string;
   position: [number, number];
   color: string;
   seed: number;
-  messageIndex: number;
+  messageIndex?: number;
+  /** Overrides the shared flower messages. */
+  message?: string;
+  /** A rare flower: already in bloom, softly luminous, a little hidden. */
+  rare?: boolean;
+  scale?: number;
 }) {
   const dpr = useThree((s) => s.viewport.dpr);
-  const bloomed = useWorld((s) => !!s.touched[id]);
+  const touchedSelf = useWorld((s) => !!s.touched[id]);
+  const bloomed = rare || touchedSelf;
   const reducedMotion = useWorld((s) => s.reducedMotion);
   const y = useMemo(() => islandHeight(position[0], position[1]), [position]);
   const col = useMemo(() => new Color(color), [color]);
@@ -96,7 +105,7 @@ export function InteractiveFlower({
         vertexColors: true,
         side: DoubleSide,
         roughness: 0.55,
-        emissive: col.clone().multiplyScalar(0.12),
+        emissive: col.clone().multiplyScalar(rare ? 0.45 : 0.12),
       }),
     [col],
   );
@@ -115,7 +124,7 @@ export function InteractiveFlower({
     g.scale(1.1, 1, 1.25);
     return g;
   }, []);
-  const glowMat = useMemo(() => createGlowMaterial("#FFD596", 0.9), []);
+  const glowMat = useMemo(() => createGlowMaterial(rare ? "#A8D0FF" : "#FFD596", 0.9), [rare]);
   const burstGeo = useMemo(() => burstGeometry(seed), [seed]);
   const burstMat = useMemo(() => createBurstMaterial("#FFE9B8"), []);
 
@@ -167,15 +176,20 @@ export function InteractiveFlower({
 
   const onTap = useCallback(() => {
     const st = useWorld.getState();
-    if (!st.touched[id]) {
+    if (rare) {
+      st.touch(id);
+      burstMat.uniforms.uStart.value = shared.uTime.value;
+      if (root.current && !reducedMotion)
+        gsap.fromTo(root.current.rotation, { z: 0.1 }, { z: 0, duration: 1.4, ease: "elastic.out(1.1, 0.35)" });
+    } else if (!st.touched[id]) {
       st.touch(id);
       bloom();
     } else if (root.current && !reducedMotion) {
       // A small happy wiggle when touched again.
       gsap.fromTo(root.current.rotation, { z: 0.12 }, { z: 0, duration: 1.2, ease: "elastic.out(1.2, 0.35)" });
     }
-    st.showMessage(messages.flowers[messageIndex % messages.flowers.length]);
-  }, [bloom, id, messageIndex, reducedMotion]);
+    st.showMessage(message ?? messages.flowers[messageIndex % messages.flowers.length]);
+  }, [bloom, burstMat, id, message, messageIndex, rare, reducedMotion]);
 
   const { hovered, active, bind } = useInteractive(onTap);
 
@@ -192,7 +206,9 @@ export function InteractiveFlower({
     if (glow.current) {
       // Breathing halo = "you can touch me". Softer once bloomed.
       const pulse = 0.5 + 0.5 * Math.sin(t * 2.2 + phase);
-      const base = bloomed ? 0.22 : 0.55 + pulse * 0.45;
+      // The rare flower only really shines once a butterfly has led the visitor to it.
+      const revealed = useWorld.getState().touched["rare-revealed"] || touchedSelf;
+      const base = rare ? (revealed ? 0.55 + pulse * 0.35 : 0.18) : bloomed ? 0.22 : 0.55 + pulse * 0.45;
       glowMat.uniforms.uOpacity.value = (base + h * 0.5) * (active || !bloomed ? 1 : 0.6) * (1 + shared.uAudio.value * 0.4);
       glow.current.scale.setScalar(0.55 + pulse * 0.12 + h * 0.15);
     }
@@ -208,7 +224,7 @@ export function InteractiveFlower({
   );
 
   return (
-    <group position={[position[0], y, position[1]]} scale={1.55}>
+    <group position={[position[0], y, position[1]]} scale={scale}>
       <group ref={root} {...bind}>
         <mesh geometry={stemGeo} castShadow>
           <meshStandardMaterial vertexColors roughness={0.9} />

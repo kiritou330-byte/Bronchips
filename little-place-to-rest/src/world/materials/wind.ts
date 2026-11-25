@@ -15,6 +15,11 @@ export interface WindOptions {
   upNormal?: number;
   /** Additional gentle push from music loudness. */
   audio?: number;
+  /**
+   * [near, far] — screen-door fade for surfaces close to the camera, so foreground
+   * canopies never wall off the view while orbiting.
+   */
+  nearFade?: [number, number];
 }
 
 /** GLSL shared wind field. Smooth in space so neighbouring blades move together like real gusts. */
@@ -46,7 +51,8 @@ vec3 windField(vec3 origin, vec3 p, float flutter) {
  * back-light translucency. Works for instanced and regular meshes.
  */
 export function applyWind<T extends Material>(material: T, o: WindOptions): T {
-  const key = `wind-${o.bendPow}-${o.bendAmp}-${o.flutter ?? 0}-${o.translucency ?? 0}-${o.upNormal ?? 0}`;
+  const fade = o.nearFade;
+  const key = `wind-${o.bendPow}-${o.bendAmp}-${o.flutter ?? 0}-${o.translucency ?? 0}-${o.upNormal ?? 0}-${fade?.join(",") ?? ""}`;
   material.customProgramCacheKey = () => key;
   material.onBeforeCompile = (shader: WebGLProgramParametersWithUniforms) => {
     shader.uniforms.uTime = shared.uTime;
@@ -56,7 +62,7 @@ export function applyWind<T extends Material>(material: T, o: WindOptions): T {
     shader.uniforms.uAudio = shared.uAudio;
 
     shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", `#include <common>\n${windGLSL}\nvarying float vTransl;`)
+      .replace("#include <common>", `#include <common>\n${windGLSL}\nvarying float vTransl;\nvarying float vCamDist;`)
       .replace(
         "#include <beginnormal_vertex>",
         `#include <beginnormal_vertex>\n objectNormal = normalize(mix(objectNormal, vec3(0.0, 1.0, 0.0), ${(o.upNormal ?? 0).toFixed(3)}));`,
@@ -84,11 +90,28 @@ export function applyWind<T extends Material>(material: T, o: WindOptions): T {
         float th = ${(o.translucencyHeight ?? 0).toFixed(3)};
         float tipF = th > 0.0 ? clamp(hgt / th, 0.0, 1.0) : 1.0;
         vTransl = pow(max(dot(vdir, uSunDir), 0.0), 3.0) * tipF;
+        vCamDist = length(wPos.xyz - cameraPosition);
         `,
       );
 
     shader.fragmentShader = shader.fragmentShader
-      .replace("#include <common>", `#include <common>\nuniform vec3 uSunColor;\nvarying float vTransl;`)
+      .replace("#include <common>", `#include <common>\nuniform vec3 uSunColor;\nvarying float vTransl;\nvarying float vCamDist;`)
+      .replace(
+        "#include <clipping_planes_fragment>",
+        fade
+          ? `#include <clipping_planes_fragment>
+        {
+          // Ordered 4x4 Bayer screen-door dither (fine, even stipple — no scanlines).
+          vec2 a2 = floor(gl_FragCoord.xy * 0.5);
+          vec2 a1 = floor(gl_FragCoord.xy);
+          float b2 = fract(dot(a2, vec2(0.5, a2.y * 0.75)));
+          float b1 = fract(dot(a1, vec2(0.5, a1.y * 0.75)));
+          float b = b2 * 0.25 + b1;
+          float keep = smoothstep(${fade[0].toFixed(2)}, ${fade[1].toFixed(2)}, vCamDist);
+          if (keep < 0.999 && b > keep * 0.85) discard;
+        }`
+          : "#include <clipping_planes_fragment>",
+      )
       .replace(
         "#include <opaque_fragment>",
         `outgoingLight += uSunColor * diffuseColor.rgb * vTransl * ${(o.translucency ?? 0).toFixed(3)};\n#include <opaque_fragment>`,
