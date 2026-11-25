@@ -60,6 +60,7 @@ export function applyWind<T extends Material>(material: T, o: WindOptions): T {
     shader.uniforms.uSunDir = shared.uSunDir;
     shader.uniforms.uSunColor = shared.uSunColor;
     shader.uniforms.uAudio = shared.uAudio;
+    shader.uniforms.uNearFade = shared.uNearFade;
 
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", `#include <common>\n${windGLSL}\nvarying float vTransl;\nvarying float vCamDist;`)
@@ -95,7 +96,7 @@ export function applyWind<T extends Material>(material: T, o: WindOptions): T {
       );
 
     shader.fragmentShader = shader.fragmentShader
-      .replace("#include <common>", `#include <common>\nuniform vec3 uSunColor;\nvarying float vTransl;\nvarying float vCamDist;`)
+      .replace("#include <common>", `#include <common>\nuniform vec3 uSunColor;\nuniform float uNearFade;\nvarying float vTransl;\nvarying float vCamDist;`)
       .replace(
         "#include <clipping_planes_fragment>",
         fade
@@ -107,7 +108,7 @@ export function applyWind<T extends Material>(material: T, o: WindOptions): T {
           float b2 = fract(dot(a2, vec2(0.5, a2.y * 0.75)));
           float b1 = fract(dot(a1, vec2(0.5, a1.y * 0.75)));
           float b = b2 * 0.25 + b1;
-          float keep = smoothstep(${fade[0].toFixed(2)}, ${fade[1].toFixed(2)}, vCamDist);
+          float keep = mix(1.0, smoothstep(${fade[0].toFixed(2)}, ${fade[1].toFixed(2)}, vCamDist), uNearFade);
           if (keep < 0.999 && b > keep * 0.85) discard;
         }`
           : "#include <clipping_planes_fragment>",

@@ -7,6 +7,7 @@ import { type PerspectiveCamera, Vector3 } from "three";
 import { orbit as orbitCfg } from "@/config/world.config";
 import { useNavigation } from "@/state/navigation";
 import { useWorld } from "@/state/world";
+import { shared } from "../materials/shared";
 import { framing, orbitPosition, rig } from "./rig";
 
 const look = new Vector3();
@@ -151,6 +152,10 @@ export function CameraRig() {
       if (rig.glance.weight > 0.001) rig.lookAt.lerp(rig.glance.point, rig.glance.weight * 0.38);
       rig.fov = orbitCfg.fov + f.fovAdd;
     }
+
+    // Foreground foliage fading is only for free orbiting; composed shots keep every leaf.
+    const fadeTarget = rig.mode === "orbit" ? 1 : 0;
+    shared.uNearFade.value += (fadeTarget - shared.uNearFade.value) * Math.min(1, dt * 2);
 
     goal.copy(rig.position);
     lookGoal.copy(rig.lookAt);

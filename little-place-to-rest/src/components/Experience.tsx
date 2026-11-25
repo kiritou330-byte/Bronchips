@@ -2,7 +2,7 @@
 
 import { PerformanceMonitor } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Component, type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import { NeutralToneMapping, SRGBColorSpace } from "three";
 import { detectInitialQuality, qualitySettings } from "@/config/quality.config";
 import { shots } from "@/config/world.config";
@@ -47,6 +47,17 @@ function Warmup() {
 
 const ORDER: Quality[] = ["low", "medium", "high"];
 
+/** If anything in the 3D world throws, fall back to the gentle 2D page instead of a blank screen. */
+class WorldBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
 function hasWebGL() {
   try {
     const c = document.createElement("canvas");
@@ -61,6 +72,8 @@ export default function Experience({ musicAvailable }: { musicAvailable: boolean
   const settings = qualitySettings[quality];
   const [webgl, setWebgl] = useState<boolean | null>(null);
   const [debug, setDebug] = useState(false);
+  // While the letter covers the screen the world doesn't need to keep rendering.
+  const letterOpen = useNavigation((s) => s.letterOpen);
 
   useEffect(() => {
     setWebgl(hasWebGL());
@@ -69,7 +82,10 @@ export default function Experience({ musicAvailable }: { musicAvailable: boolean
     useWorld.getState().setQuality(detectInitialQuality(), forced);
     useAudio.getState().setAvailability(musicAvailable ? "available" : "missing");
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const apply = () => useWorld.getState().setReducedMotion(mq.matches);
+    const apply = () => {
+      const w = useWorld.getState();
+      w.setReducedMotion(w.reducedMotionOverride ?? mq.matches);
+    };
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
@@ -79,8 +95,10 @@ export default function Experience({ musicAvailable }: { musicAvailable: boolean
   if (!webgl) return <WebGLFallback />;
 
   return (
+    <WorldBoundary fallback={<WebGLFallback />}>
     <div className="fixed inset-0 overflow-hidden bg-[var(--bg)]">
       <Canvas
+        frameloop={letterOpen ? "demand" : "always"}
         className="!touch-none"
         shadows={settings.shadows ? "percentage" : false}
         dpr={settings.dpr}
@@ -89,6 +107,11 @@ export default function Experience({ musicAvailable }: { musicAvailable: boolean
         onCreated={({ gl }) => {
           gl.toneMapping = NeutralToneMapping;
           gl.outputColorSpace = SRGBColorSpace;
+          // Phones can drop the GPU context under memory pressure: show the 2D page rather than a frozen frame.
+          gl.domElement.addEventListener("webglcontextlost", (e) => {
+            e.preventDefault();
+            setWebgl(false);
+          });
         }}
       >
         <PerformanceMonitor
@@ -111,5 +134,6 @@ export default function Experience({ musicAvailable }: { musicAvailable: boolean
       </Canvas>
       <Overlay />
     </div>
+    </WorldBoundary>
   );
 }

@@ -24,6 +24,8 @@ export const shared = {
   uCloudShade: { value: new Color(atmospheres[defaultTimeOfDay].cloudShade) },
   /** Smoothed music loudness 0..1 (0 when music is off or reactive mode disabled). */
   uAudio: { value: 0 },
+  /** 0..1 — how strongly near-camera foliage is faded (on while orbiting, off for composed shots). */
+  uNearFade: { value: 0 },
 };
 
 /** Live (interpolated) atmosphere values for things that are not shader uniforms. */

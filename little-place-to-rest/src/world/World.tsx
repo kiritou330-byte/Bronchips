@@ -7,6 +7,7 @@ import type { QualitySettings } from "@/config/quality.config";
 import { layout } from "@/config/world.config";
 import type { Quality } from "@/state/world";
 import { Atmosphere } from "./environment/Atmosphere";
+import { AudioReactive } from "./environment/AudioReactive";
 import { Motes } from "./environment/Motes";
 import { Sky } from "./environment/Sky";
 import { CloudSystem } from "./environment/CloudSystem";
@@ -43,6 +44,7 @@ export function World({ quality, settings }: { quality: Quality; settings: Quali
   return (
     <>
       <Atmosphere shadows={settings.shadows} shadowMapSize={settings.shadowMapSize} />
+      <AudioReactive />
       <Sky />
       <CloudSystem quality={quality} />
       <Island shadows={settings.shadows} />

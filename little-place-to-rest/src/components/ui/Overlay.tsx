@@ -36,7 +36,7 @@ export function Overlay() {
         {(phase === "explore" || phase === "pond" || phase === "cottage" || phase === "lookout") && (
           <motion.div
             key="wordmark"
-            className="absolute left-5 top-5 font-display text-[15px] italic tracking-wide text-[var(--ink)] [text-shadow:var(--shadow)] sm:left-8 sm:top-7 sm:text-[17px]"
+            className="absolute left-5 top-5 font-display text-[15px] italic tracking-wide text-[var(--ink)] [text-shadow:var(--shadow)] max-[379px]:hidden sm:left-8 sm:top-7 sm:text-[17px]"
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 0.9, y: 0, transition: { duration: 1.4, delay: 0.4 } }}
             exit={{ opacity: 0 }}

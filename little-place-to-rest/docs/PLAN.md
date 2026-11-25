@@ -192,8 +192,8 @@ sangat halus: amplitudo partikel ±15%, glow bunga. Tidak ada kedip.
 | M2 | Garden lengkap + Pond | Kupu-kupu, interaksi awan, navigasi antar-lokasi, kolam + shader air, latihan napas | ✅ |
 | M3 | Cottage + Letter | Pintu, interior, amplop 3D, surat | ✅ |
 | M4 | Surprises + Stay longer | 5 kejutan, lookout, transisi waktu | ✅ |
-| M5 | Audio | Player lengkap, persistensi, reaksi musik | |
-| M6 | Optimasi & aksesibilitas | Adaptive quality, reduced motion, fallback WebGL, uji browser | |
+| M5 | Audio | Player lengkap, persistensi, reaksi musik | ✅ |
+| M6 | Optimasi & aksesibilitas | Adaptive quality, reduced motion, fallback WebGL, uji browser | ✅ (sebagian, lihat catatan) |
 | M7 | Polish | Refinement visual/animasi, uji responsif | |
 
 Setiap milestone ditutup dengan QA visual di browser (screenshot mobile 390×844 dan desktop 1440×900)
@@ -244,3 +244,17 @@ angka FPS tidak. Gunakan `?debug` di HP asli untuk FPS nyata.
 - Glow affordance awan malam membuat garis tepi tiap puff → diganti pencerahan lembut merata.
 - Kejutan: bunga langka (lewat kupu-kupu), kelinci (lompat squash & stretch), lentera tersembunyi (menyala berkedip),
   batu berpesan di lookout, bintang yang meluncur dengan jejak cahaya (hanya bisa disentuh saat malam).
+
+### M5 & M6 — musik, pengaturan, ketahanan
+- Musik diuji dengan nada lokal (tidak di-commit): mulai dari CTA, terus berputar saat pindah tempat (17/40 detik
+  setelah masuk, visualizer tetap bergerak di kolam). Tanpa file → semua UI musik tersembunyi.
+- Settings: kualitas (Auto/Low/Medium/High), reduce motion, musik memengaruhi dunia.
+- Dither kanopi hanya aktif saat orbit; shot yang dikomposisi tidak lagi berbintik.
+- Shot lokasi beradaptasi di layar potret (FOV, lookout mundur) — lookout HP sebelumnya hanya menampilkan pohon.
+- Render `demand` saat surat terbuka; fallback 2D saat WebGL/konteks GPU hilang; error boundary.
+
+### Belum dilakukan / perlu perangkat asli
+- Pengukuran FPS di HP kelas menengah (sandbox merender WebGL secara software). Gunakan `?debug` di HP.
+- Uji Safari iOS (audio unlock, memori) dan Firefox.
+- DOF selektif saat close-up surat (tier High) — belum diimplementasikan.
+- Objek 3D interaktif belum bisa dijangkau via keyboard (navigasi antar tempat bisa).

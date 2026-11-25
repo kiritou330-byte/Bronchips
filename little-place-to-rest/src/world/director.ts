@@ -69,8 +69,22 @@ function gardenShotFacing(x: number, z: number): Shot {
   return { position: [p.x, p.y, p.z], target: rig.orbit.center.toArray() as Vec3, fov: 42 + f.fovAdd };
 }
 
+/**
+ * Tall phone screens see a narrow slice of each composed shot: widen the lens a little and,
+ * for wide vistas, step back along the view so the framing survives.
+ */
+function adapt(shot: Shot, pullBack = false): Shot {
+  const f = framing();
+  if (f.fovAdd === 0) return shot;
+  const position = [...shot.position] as Vec3;
+  if (pullBack) {
+    for (let i = 0; i < 3; i++) position[i] = shot.target[i] + (shot.position[i] - shot.target[i]) * (1 + (f.distMul - 1) * 0.55);
+  }
+  return { position, target: shot.target, fov: shot.fov + f.fovAdd * 0.8 };
+}
+
 const fly = (shot: Shot, duration: number, via?: Vec3[], ease = "power2.inOut", smooth = 0.4) =>
-  new Promise<void>((resolve) => flyTo(shot, { duration, via, ease, smooth, onComplete: resolve }));
+  new Promise<void>((resolve) => flyTo(adapt(shot, shot === lookoutShot), { duration, via, ease, smooth, onComplete: resolve }));
 
 /** Step out through the door and close it behind us. */
 async function leaveCottage() {
