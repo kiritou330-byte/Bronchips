@@ -20,4 +20,14 @@ I hope tomorrow brings you something a little softer.
 Take your time, okay?`,
   closing: "With warmth.",
   closeLabel: "Close this letter",
+  /**
+   * A song at the very end of the letter, played through YouTube's own embedded player
+   * (privacy-enhanced youtube-nocookie domain). Set to null to remove it.
+   */
+  song: {
+    youtubeId: "R533DDds3RY",
+    title: "Count on Me",
+    artist: "Bruno Mars",
+    label: "P.S. — a song for you",
+  } as { youtubeId: string; title: string; artist: string; label: string } | null,
 };

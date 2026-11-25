@@ -5,8 +5,8 @@
 
 export const music = {
   src: "/audio/chelsea-song.mp3",
-  title: "A Little Song for You",
-  artist: "Personal Selection",
+  title: "Count on Me",
+  artist: "Bruno Mars",
   enabled: true,
   /** 0..1 */
   volume: 0.35,

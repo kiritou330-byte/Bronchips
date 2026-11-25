@@ -6,6 +6,7 @@ import { letter } from "@/config/letter.config";
 import { useNavigation } from "@/state/navigation";
 import { useWorld } from "@/state/world";
 import { closeLetter } from "@/world/director";
+import { LetterSong } from "./LetterSong";
 
 const ease = [0.22, 0.61, 0.36, 1] as const;
 
@@ -80,6 +81,7 @@ export function LetterOverlay() {
             >
               {letter.closing}
             </motion.p>
+            <LetterSong delay={1.8 + paragraphs.length * step} />
           </motion.article>
 
           <motion.button
