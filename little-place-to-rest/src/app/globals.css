@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-ui: var(--font-manrope), "Manrope", system-ui, sans-serif;
+}
+
+:root {
+  --bg: #e9c2a0;
+  --ink: #fff8ec;
+  --ink-soft: rgba(255, 248, 236, 0.86);
+  --glow: #ffd39a;
+  --shadow: 0 1px 14px rgba(70, 42, 40, 0.45), 0 0 2px rgba(70, 42, 40, 0.25);
+  --shadow-strong: 0 2px 22px rgba(60, 36, 40, 0.6), 0 0 3px rgba(60, 36, 40, 0.35);
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+canvas {
+  touch-action: none;
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
